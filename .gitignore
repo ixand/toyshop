@@ -1,0 +1,40 @@
+# Flutter
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+pubspec.lock
+
+# Android / iOS
+**/android/.gradle/
+**/android/app/build/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/App.framework
+**/ios/Flutter/Generated.xcconfig
+
+# VS Code
+.vscode/
+
+# Go
+*.exe
+*.test
+*.out
+/go.sum
+/go.mod
+
+# PostgreSQL dumps
+*.sql
+
+# Docker
+.env
+docker-compose.override.yml
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
