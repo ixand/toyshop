@@ -11,7 +11,7 @@ import (
 var DB *gorm.DB
 
 func Connect() {
-	dsn := "host=localhost user=postgres password=admin dbname=toyshop_db port=5432 sslmode=disable"
+	dsn := "host=localhost user=postgres password=postgres dbname=toyshop_db port=5433 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Не вдалося підключитись до бази даних:", err)

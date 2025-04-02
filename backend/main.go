@@ -15,7 +15,6 @@ func main() {
 
 	// маршрути
 	r.GET("/users", controllers.GetUsers)
-	r.POST("/users", controllers.CreateUser)
 	r.PUT("/users/:id", controllers.UpdateUser)
 	r.DELETE("/users/:id", controllers.DeleteUser)
 
@@ -26,6 +25,9 @@ func main() {
 
 	r.GET("/categories", controllers.GetCategories)
 	r.POST("/categories", controllers.CreateCategory)
+
+	r.POST("/register", controllers.CreateUser)
+	r.POST("/login", controllers.Login)
 
 	// старт сервера
 	r.Run(":8080")

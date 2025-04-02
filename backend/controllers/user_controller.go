@@ -40,6 +40,45 @@ type RegisterAttempt struct {
 	Name     string `json:"name"`
 }
 
+type LoginAttempt struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+func Login(c *gin.Context) {
+	var input LoginAttempt
+	var user models.User
+
+	// Зчитати дані з тіла запиту
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Знайти користувача з таким email
+	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неправильний email або пароль"})
+		return
+	}
+
+	// Перевірити пароль
+	if !CheckPasswordHash(input.Password, user.PasswordHash) {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неправильний email або пароль"})
+		return
+	}
+
+	// Успішний вхід
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Успішний вхід",
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
+	})
+}
+
 func CreateUser(c *gin.Context) {
 	var input RegisterAttempt
 
