@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"toyshop/database"
 	"toyshop/models"
+	"toyshop/utils"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -77,6 +78,19 @@ func Login(c *gin.Context) {
 			"role":  user.Role,
 		},
 	})
+
+	// Успішний вхід → створити токен
+	token, err := utils.GenerateJWT(user.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося створити токен"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Успішний вхід",
+		"token":   token,
+	})
+
 }
 
 func CreateUser(c *gin.Context) {
@@ -157,4 +171,20 @@ func DeleteUser(c *gin.Context) {
 	database.DB.Delete(&user)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Користувача видалено"})
+}
+
+func GetCurrentUser(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизовано"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Користувача не знайдено"})
+		return
+	}
+
+	c.JSON(http.StatusOK, user)
 }

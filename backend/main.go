@@ -4,6 +4,8 @@ import (
 	"toyshop/controllers"
 	"toyshop/database"
 
+	"toyshop/middleware"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -28,6 +30,8 @@ func main() {
 
 	r.POST("/register", controllers.CreateUser)
 	r.POST("/login", controllers.Login)
+
+	r.GET("/me", middleware.AuthMiddleware(), controllers.GetCurrentUser)
 
 	// старт сервера
 	r.Run(":8080")
