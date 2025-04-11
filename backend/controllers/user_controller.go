@@ -46,6 +46,12 @@ type LoginAttempt struct {
 	Password string `json:"password"`
 }
 
+type UpdateAttempt struct {
+	Name     string `json:"name"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
 func Login(c *gin.Context) {
 	var input LoginAttempt
 	var user models.User
@@ -117,6 +123,11 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
+	if input.Name == "" || input.Email == "" || len(input.Password) < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ім’я, email та пароль обов'язкові"})
+		return
+	}
+
 	// Зберегти користувача в базу
 	user.Name = input.Name
 	user.Email = input.Email
@@ -142,17 +153,28 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	var input models.User
+	var input UpdateAttempt
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if input.Name == "" || input.Email == "" || len(input.Password) < 1 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Ім’я, email та пароль не можуть бути порожні"})
+		return
+	}
+
+	// Хешуємо новий пароль
+	hashedPassword, err := HashPassword(input.Password)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Оновлюємо поля
 	user.Name = input.Name
 	user.Email = input.Email
-	user.Role = input.Role
-	user.PasswordHash = input.PasswordHash
+	user.PasswordHash = hashedPassword
 
 	database.DB.Save(&user)
 
