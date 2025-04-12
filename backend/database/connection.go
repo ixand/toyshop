@@ -3,6 +3,7 @@ package database
 import (
 	"fmt"
 	"log"
+	"toyshop/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -19,4 +20,13 @@ func Connect() {
 
 	fmt.Println("✅ Підключення до бази даних успішне!")
 	DB = db
+
+	DB.AutoMigrate(
+		&models.User{},
+		&models.Product{},
+		&models.Category{},
+		&models.Order{},
+		&models.OrderItem{},
+	)
+
 }

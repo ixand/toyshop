@@ -27,6 +27,7 @@ func main() {
 
 	r.GET("/categories", controllers.GetCategories)
 	r.POST("/categories", controllers.CreateCategory)
+	r.POST("/orders", middleware.AuthMiddleware(), controllers.CreateOrder)
 
 	r.POST("/register", controllers.CreateUser)
 	r.POST("/login", controllers.Login)
