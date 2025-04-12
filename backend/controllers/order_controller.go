@@ -9,7 +9,8 @@ import (
 )
 
 type OrderRequest struct {
-	Items []struct {
+	ShippingAddress string `json:"shipping_address"`
+	Items           []struct {
 		ProductID uint `json:"product_id"`
 		Quantity  int  `json:"quantity"`
 	} `json:"items"`
@@ -30,7 +31,9 @@ func CreateOrder(c *gin.Context) {
 	}
 
 	order := models.Order{
-		UserID: userID,
+		UserID:          userID,
+		ShippingAddress: request.ShippingAddress,
+		PaymentStatus:   "unpaid", // за замовчуванням
 	}
 
 	result := database.DB.Create(&order)

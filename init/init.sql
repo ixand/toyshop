@@ -32,6 +32,8 @@ CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id),
     status TEXT DEFAULT 'pending',
+    shipping_address TEXT,
+    payment_status TEXT DEFAULT 'unpaid',
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -42,4 +44,13 @@ CREATE TABLE order_items (
     product_id INT REFERENCES products(id),
     quantity INT NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL
+);
+
+CREATE TABLE reviews (
+    id SERIAL PRIMARY KEY,
+    product_id INT REFERENCES products(id),
+    user_id INT REFERENCES users(id),
+    rating INT CHECK (rating BETWEEN 1 AND 5),
+    comment TEXT,
+    created_at TIMESTAMP DEFAULT NOW()
 );

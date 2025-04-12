@@ -27,6 +27,7 @@ func Connect() {
 		&models.Category{},
 		&models.Order{},
 		&models.OrderItem{},
+		&models.Review{},
 	)
 
 }
