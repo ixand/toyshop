@@ -35,6 +35,8 @@ func main() {
 
 	r.GET("/me", middleware.AuthMiddleware(), controllers.GetCurrentUser)
 
+	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
+
 	// старт сервера
 	r.Run(":8080")
 }

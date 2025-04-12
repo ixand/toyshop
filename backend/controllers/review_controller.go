@@ -40,7 +40,23 @@ func CreateReview(c *gin.Context) {
 		Comment:   input.Comment,
 	}
 
-	database.DB.Create(&review)
+	result := database.DB.Create(&review)
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
 
 	c.JSON(http.StatusCreated, gin.H{"message": "Відгук додано!"})
+}
+
+func GetReviewsByProduct(c *gin.Context) {
+	productID := c.Param("product_id")
+	var reviews []models.Review
+
+	if err := database.DB.Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reviews)
 }
