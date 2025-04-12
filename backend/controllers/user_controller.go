@@ -74,27 +74,23 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Успішний вхід
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Успішний вхід",
-		"user": gin.H{
-			"id":    user.ID,
-			"name":  user.Name,
-			"email": user.Email,
-			"role":  user.Role,
-		},
-	})
-
-	// Успішний вхід → створити токен
+	// Створити токен
 	token, err := utils.GenerateJWT(user.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося створити токен"})
 		return
 	}
 
+	// Повертаємо токен і користувача одним JSON-об'єктом
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Успішний вхід",
 		"token":   token,
+		"user": gin.H{
+			"id":    user.ID,
+			"name":  user.Name,
+			"email": user.Email,
+			"role":  user.Role,
+		},
 	})
 
 }
