@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -9,33 +10,49 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
-  void login() async {
-    try {
-      final response = await ApiService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
+  bool _isLoading = false;
 
-      final token = response['token'];
-      print('✅ Успішний вхід. Токен: $token');
+void _login() async {
+  setState(() => _isLoading = true);
 
-      // TODO: зберегти токен + перейти до HomeScreen
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    } catch (e) {
-      print('❌ Помилка: $e');
+  print('▶️ Вхід натиснуто: $email | $password');
 
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Помилка входу'),
-          content: Text(e.toString()),
-        ),
-      );
-    }
+  final success = await ApiService.login(email, password);
+
+  print('✅ Результат логіну: $success');
+
+  setState(() => _isLoading = false);
+
+  if (success) {
+    print('➡️ Перехід на HomeScreen');
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  } else {
+    print('❌ Помилка логіну: невірні дані');
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Помилка входу'),
+        content: const Text('Неправильний email або пароль'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -46,20 +63,21 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           children: [
             TextField(
-              controller: emailController,
+              controller: _emailController,
               decoration: const InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 16),
             TextField(
-              controller: passwordController,
+              controller: _passwordController,
               decoration: const InputDecoration(labelText: 'Пароль'),
               obscureText: true,
             ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: login,
-              child: const Text('Увійти'),
-            ),
+            const SizedBox(height: 20),
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+                    onPressed: _login,
+                    child: const Text('Увійти'),
+                  ),
           ],
         ),
       ),
