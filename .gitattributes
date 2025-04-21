@@ -1,0 +1,24 @@
+# Позначив Dart і Go як основні мови
+*.dart linguist-detectable=true
+*.go linguist-detectable=true
+
+# Ігноруємо системні/нативні частини Flutter
+android/** linguist-vendored
+ios/** linguist-vendored
+build/** linguist-vendored
+
+# Ігноруємо типові C++/Swift файли
+*.cpp linguist-vendored
+*.h linguist-vendored
+*.cmake linguist-vendored
+*.swift linguist-vendored
+
+# Docker та ініціалізаційні скрипти не враховуються
+docker-compose.yml linguist-vendored
+init/** linguist-vendored
+db/** linguist-vendored
+
+# Прибираємо markdown/docs з підрахунку
+*.md linguist-documentation
+*.txt linguist-documentation
+LICENSE linguist-documentation
