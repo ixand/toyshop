@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -15,70 +16,115 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLoading = false;
 
-void _login() async {
-  setState(() => _isLoading = true);
+  void _login() async {
+    setState(() {
+      _isLoading = true;
+    });
 
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
 
-  print('▶️ Вхід натиснуто: $email | $password');
+    print("➡️ Вхід натиснуто: $email | $password");
+    final success = await ApiService.login(email, password);
 
-  final success = await ApiService.login(email, password);
+    setState(() {
+      _isLoading = false;
+    });
 
-  print('✅ Результат логіну: $success');
+    if (success) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text('Помилка входу'),
+          content: const Text('Неправильний email або пароль'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
+  }
 
-  setState(() => _isLoading = false);
-
-  if (success) {
-    print('➡️ Перехід на HomeScreen');
+  void _guestLogin() {
+    // Просто йдемо на HomeScreen без токену
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => const HomeScreen()),
     );
-  } else {
-    print('❌ Помилка логіну: невірні дані');
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Помилка входу'),
-        content: const Text('Неправильний email або пароль'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Вхід')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Пароль'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            _isLoading
-                ? const CircularProgressIndicator()
-                : ElevatedButton(
-                    onPressed: _login,
-                    child: const Text('Увійти'),
-                  ),
-          ],
+      backgroundColor: Colors.grey[100],
+      body: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.toys, size: 72, color: Colors.blueAccent),
+              const SizedBox(height: 16),
+              const Text(
+                'Toyshop App',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 32),
+              TextField(
+                controller: _emailController,
+                decoration: const InputDecoration(
+                  labelText: 'Email',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: 'Пароль',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 24),
+              _isLoading
+                  ? const CircularProgressIndicator()
+                  : ElevatedButton.icon(
+                      onPressed: _login,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Увійти'),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size.fromHeight(48),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+              const SizedBox(height: 12),
+              TextButton(
+                onPressed: _guestLogin,
+                child: const Text('Увійти як гість'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                  );
+                },
+                child: const Text("Ще не маєте акаунту? Зареєструватися"),
+              ),
+            ],
+          ),
         ),
       ),
     );
