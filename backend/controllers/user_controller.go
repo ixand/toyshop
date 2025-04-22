@@ -204,5 +204,11 @@ func GetCurrentUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusOK, gin.H{
+		"id":         user.ID,
+		"name":       user.Name,
+		"email":      user.Email,
+		"role":       user.Role,
+		"created_at": user.CreatedAt, // ← додай це поле
+	})
 }
