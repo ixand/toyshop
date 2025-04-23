@@ -49,6 +49,7 @@ type LoginAttempt struct {
 type UpdateAttempt struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
+	Role     string `json:"role"`
 	Password string `json:"password"`
 }
 
@@ -171,7 +172,7 @@ func UpdateUser(c *gin.Context) {
 	user.Name = input.Name
 	user.Email = input.Email
 	user.PasswordHash = hashedPassword
-
+	user.Role = input.Role
 	database.DB.Save(&user)
 
 	c.JSON(http.StatusOK, user)

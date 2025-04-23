@@ -21,21 +21,25 @@ func main() {
 	r.DELETE("/users/:id", controllers.DeleteUser)
 
 	r.GET("/products", controllers.GetProducts)
-	r.POST("/products", controllers.CreateProduct)
+
 	r.PUT("/products/:id", controllers.UpdateProduct)
 	r.DELETE("/products/:id", controllers.DeleteProduct)
 
 	r.GET("/categories", controllers.GetCategories)
-	r.POST("/categories", controllers.CreateCategory)
-	r.POST("/orders", middleware.AuthMiddleware(), controllers.CreateOrder)
-	r.POST("/reviews", middleware.AuthMiddleware(), controllers.CreateReview)
 
 	r.POST("/register", controllers.CreateUser)
 	r.POST("/login", controllers.Login)
 
-	r.GET("/me", middleware.AuthMiddleware(), controllers.GetCurrentUser)
-
 	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
+
+	auth := r.Group("/")
+	auth.Use(middleware.AuthMiddleware())
+	{
+		auth.POST("/products", controllers.CreateProduct)
+		auth.POST("/orders", controllers.CreateOrder)
+		auth.POST("/reviews", controllers.CreateReview)
+		auth.GET("/me", controllers.GetCurrentUser)
+	}
 
 	// старт сервера
 	r.Run(":8080")

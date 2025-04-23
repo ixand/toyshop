@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import '../utils/shared_prefs.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 
@@ -17,41 +18,44 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   void _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+  setState(() {
+    _isLoading = true;
+  });
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    print("➡️ Вхід натиснуто: $email | $password");
-    final success = await ApiService.login(email, password);
+  print("➡️ Вхід натиснуто: $email | $password");
 
-    setState(() {
-      _isLoading = false;
-    });
+  final result = await ApiService.login(email, password);
 
-    if (success) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('Помилка входу'),
-          content: const Text('Неправильний email або пароль'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
-    }
+  setState(() {
+    _isLoading = false;
+  });
+
+  if (result != null && result['token'] != null) {
+    await SharedPrefs.saveToken(result['token']);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const HomeScreen()),
+    );
+  } else {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Помилка входу'),
+        content: const Text('Неправильний email або пароль'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
+}
+
 
   void _guestLogin() {
     // Просто йдемо на HomeScreen без токену

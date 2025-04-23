@@ -20,12 +20,20 @@ func GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 func CreateProduct(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизовано"})
+		return
+	}
+
 	var product models.Product
 
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	product.OwnerID = userID.(uint) // 🔹 Привʼязка до авторизованого користувача
 
 	result := database.DB.Create(&product)
 	if result.Error != nil {
@@ -35,6 +43,7 @@ func CreateProduct(c *gin.Context) {
 
 	c.JSON(http.StatusCreated, product)
 }
+
 func UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
 

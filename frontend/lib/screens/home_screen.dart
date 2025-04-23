@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.view_list_outlined),
-      label: 'Категорії',
+      label: 'Рейтинги',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.message_outlined),
