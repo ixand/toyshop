@@ -57,6 +57,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   }
 
 Future<void> _submitProduct() async {
+  if (_nameController.text.trim().isEmpty ||
+    _descController.text.trim().isEmpty ||
+    double.tryParse(_priceController.text) == null ||
+    double.parse(_priceController.text) <= 0) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Заповніть всі поля та вкажіть коректну ціну')),
+  );
+  return;
+}
+
   final token = await SharedPrefs.getToken(); // ✅ токен збережено при логіні
   if (token == null) {
     print('🔴 Токен відсутній');

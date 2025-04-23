@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:toyshop/services/api_service.dart';
 import 'package:toyshop/screens/create_product_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -12,6 +15,8 @@ class ProductsScreen extends StatefulWidget {
 class _ProductsScreenState extends State<ProductsScreen> {
   List<dynamic> _allProducts = [];
   List<dynamic> _filteredProducts = [];
+  List<String> _selectedFilters = []; // обрані категорії
+  List<Map<String, dynamic>> _allCategories = [];
   String _searchTerm = '';
   String _sortOption = 'name';
 
@@ -19,6 +24,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void initState() {
     super.initState();
     _loadProducts();
+    _fetchCategories();
   }
 
   Future<void> _loadProducts() async {
@@ -29,39 +35,117 @@ class _ProductsScreenState extends State<ProductsScreen> {
     });
   }
 
-  void _applyFilters() {
-    List<dynamic> results = _allProducts;
-
-    // Пошук
-    if (_searchTerm.isNotEmpty) {
-      results = results.where((p) =>
-          (p['name'] ?? '').toLowerCase().contains(_searchTerm.toLowerCase())).toList();
-    }
-
-    // Сортування
-    if (_sortOption == 'name') {
-      results.sort((a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
-    } else if (_sortOption == 'price') {
-      results.sort((a, b) => (a['price'] ?? 0).compareTo(b['price'] ?? 0));
-    }
-
+  Future<void> _fetchCategories() async {
+  final response = await http.get(Uri.parse('http://10.0.2.2:8080/categories'));
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body) as List;
     setState(() {
-      _filteredProducts = results;
-    });
+  _allCategories = data.map((e) => {
+    'id': e['id'],
+    'name': e['name'],
+    }).toList();
+      });
+
+  }
+}
+
+
+ void _applyFilters() {
+  List<dynamic> results = _allProducts;
+
+  // Пошук
+  if (_searchTerm.isNotEmpty) {
+    results = results.where((p) =>
+      (p['name'] ?? '').toLowerCase().contains(_searchTerm.toLowerCase())
+    ).toList();
   }
 
-  void _showFilterDialog() {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Фільтри'),
-        content: const Text('(приклад) Тут буде фільтр за категоріями'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Закрити'))
-        ],
-      ),
-    );
+  // Фільтрація за категоріями
+  if (_selectedFilters.isNotEmpty) {
+  // знайти category_id для кожної назви
+  final filteredCategoryIds = _allCategories
+      .where((cat) => _selectedFilters.contains(cat['name']))
+      .map((cat) => cat['id'])
+      .toList();
+
+          results = results.where((p) =>
+            filteredCategoryIds.contains(p['category_id'])
+          ).toList();
   }
+
+
+  // Сортування
+  if (_sortOption == 'name') {
+    results.sort((a, b) => (a['name'] ?? '').compareTo(b['name'] ?? ''));
+  } else if (_sortOption == 'price') {
+    results.sort((a, b) => (a['price'] ?? 0).compareTo(b['price'] ?? 0));
+  }
+
+  setState(() {
+    _filteredProducts = results;
+  });
+}
+
+ void _showFilterDialog() {
+  showDialog(
+    context: context,
+    builder: (_) {
+      // копія обраних фільтрів для тимчасового вибору
+      final selectedCategories = Set<String>.from(_selectedFilters);
+
+      return StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Фільтрувати за категоріями'),
+          content: SingleChildScrollView(
+            child: Column(
+             children: _allCategories.map((category) {
+          final name = category['name'];
+          return CheckboxListTile(
+            value: selectedCategories.contains(name),
+            title: Text(name),
+            onChanged: (bool? selected) {
+              setState(() {
+                if (selected == true) {
+                  selectedCategories.add(name);
+                } else {
+                  selectedCategories.remove(name);
+                }
+              });
+            },
+          );
+        }).toList(),
+
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _selectedFilters.clear(); // очищаємо обрані фільтри
+                });
+                Navigator.pop(context);
+                _applyFilters(); // оновлюємо список після скидання
+              },
+              child: const Text('Скинути'),
+            ),
+
+            ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _selectedFilters = selectedCategories.toList();
+                });
+                Navigator.pop(context);
+                _applyFilters(); // оновити список товарів
+              },
+              child: const Text('Застосувати'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
 
   @override
   Widget build(BuildContext context) {
