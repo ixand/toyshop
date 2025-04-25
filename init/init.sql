@@ -56,3 +56,13 @@ CREATE TABLE reviews (
     comment TEXT,
     created_at TIMESTAMP DEFAULT NOW()
 );
+
+CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    sender_id INT REFERENCES users(id),
+    receiver_id INT REFERENCES users(id),
+    content TEXT,
+    created_at TIMESTAMP DEFAULT NOW(),
+    thread_id TEXT  -- унікальний ідентифікатор пари (наприклад: "1_2" або UUID)
+);
+

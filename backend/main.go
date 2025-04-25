@@ -44,6 +44,11 @@ func main() {
 		auth.GET("/my-orders", controllers.GetMyOrders)
 		auth.PUT("/orders/:id/cancel", controllers.CancelOrder)
 
+		auth.GET("/messages/:user_id", controllers.GetThreadMessages)
+
+		auth.POST("/messages", controllers.CreateMessage)
+		auth.GET("/messages", controllers.GetMyMessages)
+
 	}
 
 	// старт сервера

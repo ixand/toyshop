@@ -17,6 +17,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       int _quantity = 1;
       String? _ownerName;
       String? _createdAt;
+      final _messageController = TextEditingController();
+
 
 
       @override
@@ -109,6 +111,36 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     return null;
   }
 
+  Future<void> _sendMessageToAuthor() async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+  if (token == null) return;
+
+  final response = await http.post(
+    Uri.parse('http://10.0.2.2:8080/messages'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'receiver_id': widget.product['owner_id'],
+      'content': _messageController.text,
+    }),
+  );
+
+  if (response.statusCode == 201) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Повідомлення надіслано')),
+    );
+    _messageController.clear();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Помилка: ${response.body}')),
+    );
+  }
+}
+
+
   @override
   Widget build(BuildContext context) {
     final createdAt = widget.product['created_at']?.substring(0, 10) ?? 'невідомо';
@@ -162,6 +194,22 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               icon: const Icon(Icons.shopping_cart),
               label: const Text('Замовити'),
             ),
+            const SizedBox(height: 24),
+      TextField(
+        controller: _messageController,
+        decoration: const InputDecoration(
+          labelText: 'Повідомлення автору',
+          border: OutlineInputBorder(),
+        ),
+        maxLines: 3,
+      ),
+      const SizedBox(height: 12),
+      ElevatedButton.icon(
+        onPressed: () => _sendMessageToAuthor(),
+        icon: const Icon(Icons.message),
+        label: const Text('Надіслати повідомлення автору'),
+      ),
+
           ],
         ),
       ),
