@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toyshop/services/api_service.dart';
 import 'package:toyshop/screens/create_product_screen.dart';
+import 'package:toyshop/screens/product_details_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
@@ -218,6 +219,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
                         leading: const Icon(Icons.toys),
                         title: Text(product['name'] ?? 'Без назви'),
                         subtitle: Text('${product['price']} грн'),
+                        onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ProductDetailScreen(product: product),
+                                ),
+                              );
+                            },
                       );
                     },
                   ),

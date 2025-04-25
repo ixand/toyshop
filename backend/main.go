@@ -26,6 +26,7 @@ func main() {
 	r.DELETE("/products/:id", controllers.DeleteProduct)
 
 	r.GET("/categories", controllers.GetCategories)
+	r.POST("/categories", controllers.CreateCategory)
 
 	r.POST("/register", controllers.CreateUser)
 	r.POST("/login", controllers.Login)
@@ -39,8 +40,13 @@ func main() {
 		auth.POST("/orders", controllers.CreateOrder)
 		auth.POST("/reviews", controllers.CreateReview)
 		auth.GET("/me", controllers.GetCurrentUser)
+		auth.GET("/my-products", controllers.GetMyProducts)
+		auth.GET("/my-orders", controllers.GetMyOrders)
+		auth.PUT("/orders/:id/cancel", controllers.CancelOrder)
+
 	}
 
 	// старт сервера
-	r.Run(":8080")
+	r.Run("0.0.0.0:8080")
+
 }

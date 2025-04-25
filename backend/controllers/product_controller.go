@@ -19,6 +19,19 @@ func GetProducts(c *gin.Context) {
 
 	c.JSON(http.StatusOK, products)
 }
+
+func GetMyProducts(c *gin.Context) {
+	userID := c.MustGet("user_id").(uint)
+
+	var products []models.Product
+	if err := database.DB.Where("owner_id = ?", userID).Find(&products).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося завантажити товари"})
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}
+
 func CreateProduct(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

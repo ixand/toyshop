@@ -105,6 +105,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Text('Перший вхід у додаток')
               ],
             ),
+            const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pushNamed(context, '/my-products');
+                  },
+                  icon: const Icon(Icons.list),
+                  label: const Text('Мої оголошення'),
+                ),
+
             const SizedBox(height: 32),
             ElevatedButton.icon(
              onPressed: _logout,

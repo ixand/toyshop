@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:toyshop/screens/profile_screen.dart';
 import 'package:toyshop/screens/messages_screen.dart';
-import 'package:toyshop/screens/placeholder_screen.dart';
+import 'package:toyshop/screens/order_screen.dart';
 import 'package:toyshop/screens/products_screen.dart';
 
 
@@ -17,7 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final List<Widget> _screens = const [
     ProductsScreen(),
-    PlaceholderScreen(title: 'Категорії'),
+    OrderScreen(),
     MessagesScreen(),
     ProfileScreen(),
   ];
@@ -29,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.view_list_outlined),
-      label: 'Рейтинги',
+      label: 'Замовлення',
     ),
     BottomNavigationBarItem(
       icon: Icon(Icons.message_outlined),

@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.0.2.2:8080'; // ← якщо тестуєш на Android емульторі
+  static const String baseUrl = 'http://10.0.2.2:8080'; 
 
   // у api_service.dart
 static Future<Map<String, dynamic>?> login(String email, String password) async {
@@ -17,9 +17,12 @@ static Future<Map<String, dynamic>?> login(String email, String password) async 
   if (response.statusCode == 200) {
     return jsonDecode(response.body);
   } else {
+    // 🔴 Лог помилки
+    print('🔴 Login error: ${response.statusCode} - ${response.body}');
     return null;
   }
 }
+
 
 
   static Future<bool> register(String name, String email, String password) async {

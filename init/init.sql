@@ -1,24 +1,24 @@
 -- Таблиця користувачів
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    _name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
-    role TEXT DEFAULT 'user',
+    _role TEXT DEFAULT 'user',
     created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Таблиця категорій
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL
+    _name TEXT NOT NULL
 );
 
 -- Таблиця товарів
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    description TEXT,
+    _name TEXT NOT NULL,
+    _description TEXT,
     price NUMERIC(10, 2) NOT NULL,
     image_url TEXT,
     stock_quantity INT DEFAULT 0,
@@ -31,9 +31,10 @@ CREATE TABLE products (
 CREATE TABLE orders (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id),
-    status TEXT DEFAULT 'pending',
+    _status TEXT DEFAULT 'очікується',
     shipping_address TEXT,
-    payment_status TEXT DEFAULT 'unpaid',
+    payment_status TEXT DEFAULT 'неоплачений',
+    total_price NUMERIC(10, 2),
     created_at TIMESTAMP DEFAULT NOW()
 );
 
@@ -46,9 +47,10 @@ CREATE TABLE order_items (
     unit_price NUMERIC(10, 2) NOT NULL
 );
 
+-- Таблиця відгуків з каскадним видаленням
 CREATE TABLE reviews (
     id SERIAL PRIMARY KEY,
-    product_id INT REFERENCES products(id),
+    product_id INT REFERENCES products(id) ON DELETE CASCADE,
     user_id INT REFERENCES users(id),
     rating INT CHECK (rating BETWEEN 1 AND 5),
     comment TEXT,
