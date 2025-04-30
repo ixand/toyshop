@@ -1,17 +1,31 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 	"toyshop/database"
 	"toyshop/models"
 
 	"github.com/gin-gonic/gin"
 )
 
+func min(a, b uint) uint {
+	if a < b {
+		return a
+	}
+	return b
+}
+func max(a, b uint) uint {
+	if a > b {
+		return a
+	}
+	return b
+}
+
 type MessageRequest struct {
 	ReceiverID uint   `json:"receiver_id"`
 	Content    string `json:"content"`
+	ProductID  uint   `json:"product_id"` // 🔥 нове поле
 }
 
 func CreateMessage(c *gin.Context) {
@@ -28,11 +42,20 @@ func CreateMessage(c *gin.Context) {
 		return
 	}
 
+	threadID := fmt.Sprintf("%d_%d_%d", min(senderID, input.ReceiverID), max(senderID, input.ReceiverID), input.ProductID)
+
 	message := models.Message{
 		SenderID:   senderID,
 		ReceiverID: input.ReceiverID,
 		Content:    input.Content,
+		ThreadID:   threadID,
 	}
+
+	if input.ReceiverID == senderID {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Не можна надсилати повідомлення самому собі"})
+		return
+	}
+
 	if err := database.DB.Create(&message).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -49,24 +72,27 @@ func GetMyMessages(c *gin.Context) {
 	}
 	userID := userIDRaw.(uint)
 
-	// Завантажуємо повідомлення разом з інформацією про відправника
 	var messages []struct {
 		ID         uint   `json:"id"`
 		SenderID   uint   `json:"sender_id"`
 		SenderName string `json:"sender_name"`
 		Content    string `json:"content"`
 		CreatedAt  string `json:"created_at"`
+		ThreadID   string `json:"thread_id"`
+		ProductID  uint   `json:"product_id"`
 	}
 
-	err := database.DB.
-		Table("messages").
-		Select("messages.id, messages.sender_id, users._name as sender_name, messages.content, messages.created_at").
-		Joins("left join users on users.id = messages.sender_id").
-		Where("messages.receiver_id = ?", userID).
-		Order("messages.created_at DESC").
-		Scan(&messages).Error
+	query := `
+	SELECT DISTINCT ON (thread_id) 
+		messages.id, messages.sender_id, users._name as sender_name, 
+		messages.content, messages.created_at, messages.thread_id, messages.product_id
+	FROM messages
+	LEFT JOIN users ON users.id = messages.sender_id
+	WHERE messages.receiver_id = ? OR messages.sender_id = ?
+	ORDER BY thread_id, created_at DESC
+	`
 
-	if err != nil {
+	if err := database.DB.Raw(query, userID, userID).Scan(&messages).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося завантажити повідомлення"})
 		return
 	}
@@ -75,23 +101,28 @@ func GetMyMessages(c *gin.Context) {
 }
 
 func GetThreadMessages(c *gin.Context) {
-	userIDRaw, _ := c.Get("user_id")
-	userID := userIDRaw.(uint)
-	otherIDParam := c.Param("user_id")
-	otherID, err := strconv.ParseUint(otherIDParam, 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Невірний ID"})
+	threadID := c.Param("thread_id")
+
+	var messages []models.Message
+	if err := database.DB.
+		Where("thread_id = ?", threadID).
+		Order("created_at").
+		Find(&messages).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	var messages []models.Message
-	err = database.DB.
-		Where("(sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?)",
-			userID, otherID, otherID, userID).
-		Order("created_at").
-		Find(&messages).Error
+	c.JSON(http.StatusOK, messages)
+}
 
-	if err != nil {
+func GetMessagesByThread(c *gin.Context) {
+	threadID := c.Param("thread_id")
+
+	var messages []models.Message
+	if err := database.DB.
+		Where("thread_id = ?", threadID).
+		Order("created_at").
+		Find(&messages).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

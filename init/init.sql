@@ -14,6 +14,16 @@ CREATE TABLE categories (
     _name TEXT NOT NULL
 );
 
+INSERT INTO categories (_name) VALUES
+('Іграшки для дітей'),
+('Настільні ігри'),
+('Конструктори'),
+('Ляльки та аксесуари'),
+('М’які іграшки'),
+('Творчість та хобі'),
+('Радіокеровані моделі'),
+('Спортивні товари для дітей');
+
 -- Таблиця товарів
 CREATE TABLE products (
     id SERIAL PRIMARY KEY,
@@ -42,7 +52,7 @@ CREATE TABLE orders (
 CREATE TABLE order_items (
     id SERIAL PRIMARY KEY,
     order_id INT REFERENCES orders(id) ON DELETE CASCADE,
-    product_id INT REFERENCES products(id),
+    product_id INT REFERENCES products(id) ON DELETE CASCADE,
     quantity INT NOT NULL,
     unit_price NUMERIC(10, 2) NOT NULL
 );
@@ -62,6 +72,7 @@ CREATE TABLE messages (
     sender_id INT REFERENCES users(id),
     receiver_id INT REFERENCES users(id),
     content TEXT,
+    product_id INT REFERENCES products(id) ON DELETE CASCADE,
     created_at TIMESTAMP DEFAULT NOW(),
     thread_id TEXT  -- унікальний ідентифікатор пари (наприклад: "1_2" або UUID)
 );

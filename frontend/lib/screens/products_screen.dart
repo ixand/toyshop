@@ -18,6 +18,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   List<dynamic> _filteredProducts = [];
   List<String> _selectedFilters = []; // обрані категорії
   List<Map<String, dynamic>> _allCategories = [];
+  List<dynamic> _products = [];
   String _searchTerm = '';
   String _sortOption = 'name';
 
@@ -26,6 +27,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     super.initState();
     _loadProducts();
     _fetchCategories();
+    _fetchProducts();
   }
 
   Future<void> _loadProducts() async {
@@ -47,8 +49,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
     }).toList();
       });
 
+   }
   }
-}
+
+  Future<void> _fetchProducts() async {
+  final response = await http.get(Uri.parse('http://10.0.2.2:8080/products'));
+  if (response.statusCode == 200) {
+    final data = jsonDecode(response.body);
+    setState(() {
+      _products = data; // ✅ перезапис
+      });
+    }
+  }
 
 
  void _applyFilters() {
@@ -153,11 +165,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Товари')),
               floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const CreateProductScreen()),
-            );
+          onPressed: () async {
+            final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const CreateProductScreen()),
+        );
+
+        if (result == true) {
+          await _loadProducts(); 
+        }
+
           },
           child: const Icon(Icons.add),
         ),

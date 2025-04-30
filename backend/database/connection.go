@@ -21,13 +21,14 @@ func Connect() {
 	fmt.Println("✅ Підключення до бази даних успішне!")
 	DB = db
 
-	DB.AutoMigrate(
+	db.AutoMigrate(
 		&models.User{},
 		&models.Product{},
 		&models.Category{},
 		&models.Order{},
 		&models.OrderItem{},
 		&models.Review{},
+		&models.Message{},
 	)
 
 }

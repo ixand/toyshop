@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:toyshop/utils/shared_prefs.dart';
-import 'package:toyshop/screens/chat_screen.dart'; // ← не забудь
+import 'package:toyshop/screens/chat_screen.dart'; 
 
 class MessagesScreen extends StatefulWidget {
   const MessagesScreen({super.key});
@@ -39,6 +39,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   Future<void> _fetchMessages() async {
   final token = await SharedPrefs.getToken();
+  print('Token: $token');  // Вивести токен в консолі для перевірки
   final response = await http.get(
     Uri.parse('http://10.0.2.2:8080/messages'),
     headers: {'Authorization': 'Bearer $token'},
@@ -46,23 +47,16 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
-    // Групуємо по sender_id
-    final seen = <int>{};
-    final uniqueMessages = <dynamic>[];
-
-    for (final msg in data) {
-      final senderId = msg['sender_id'];
-      if (!seen.contains(senderId)) {
-        seen.add(senderId);
-        uniqueMessages.add(msg);
-      }
+    if (data != null && data is List) {
+      setState(() => _messages = data);
+    } else {
+      // Якщо немає даних або вони не в списку, відображаємо порожнє повідомлення
+      setState(() => _messages = []);
     }
-
-    setState(() => _messages = uniqueMessages);
   } else {
     setState(() => _messages = []);
   }
-}
+  }
 
 
   Future<void> _sendReply(int receiverId) async {
@@ -126,24 +120,29 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 final msg = _messages[index];
                 final senderId = msg['sender_id'];
 
-               return ListTile(
-          leading: const Icon(Icons.message),
-          title: Text(msg['content']),
-          subtitle: Text('Від: ${msg['sender_name'] ?? 'Невідомо'}'),
-          onTap: () {
-            if (_currentUserId != null) {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => ChatScreen(receiverId: senderId),
-                  ),
-                );
-              }
-            },
-          );
+                return ListTile(
+                  leading: const Icon(Icons.message),
+                  title: Text(msg['content']),
+                  subtitle: Text('Від: ${msg['sender_name'] ?? 'Невідомо'}'),
+                  onTap: () {
+                    if (_currentUserId != null) {
+                     final threadId = msg['thread_id'];
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              receiverId: msg['sender_id'],
+                              productId: msg['product_id'],
+                              threadId: msg['thread_id'],
+                            ),
+                          ),
+                        );
 
-        },
-      ),
+                    }
+                  },
+                );
+              },
+            ),
     );
   }
 }

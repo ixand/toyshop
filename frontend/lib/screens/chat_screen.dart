@@ -6,11 +6,20 @@ import 'dart:math';
 
 class ChatScreen extends StatefulWidget {
   final int receiverId;
-  const ChatScreen({super.key, required this.receiverId});
+  final int productId;
+  final String threadId;
+
+  const ChatScreen({
+    super.key,
+    required this.receiverId,
+    required this.productId,
+    required this.threadId,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
 }
+
 
 class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> _messages = [];
@@ -38,49 +47,57 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadThreadMessages() async {
-    final token = await SharedPrefs.getToken();
-    final res = await http.get(
-      Uri.parse('http://10.0.2.2:8080/messages/${widget.receiverId}'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+  final token = await SharedPrefs.getToken();
+  final res = await http.get(
+    Uri.parse('http://10.0.2.2:8080/messages/thread/${widget.threadId}'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
 
-    if (res.statusCode == 200) {
-      final data = jsonDecode(res.body);
-      setState(() => _messages = data);
-      _scrollDown();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Помилка при завантаженні чату')),
-      );
-    }
+  if (res.statusCode == 200) {
+    final data = jsonDecode(res.body);
+    setState(() => _messages = data);
+    _scrollDown();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Помилка при завантаженні чату')),
+    );
+  }
+}
+
+Future<void> _sendMessage() async {
+  final token = await SharedPrefs.getToken();
+
+  if (_currentUserId == widget.receiverId) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Ви не можете надіслати повідомлення самому собі')),
+    );
+    return;
   }
 
-  Future<void> _sendMessage() async {
-    final token = await SharedPrefs.getToken();
-    if (_controller.text.trim().isEmpty) return;
+  final res = await http.post(
+    Uri.parse('http://10.0.2.2:8080/messages'),
+    headers: {
+      'Authorization': 'Bearer $token',
+      'Content-Type': 'application/json',
+    },
+    body: jsonEncode({
+      'receiver_id': widget.receiverId,
+      'content': _controller.text,
+      'product_id': widget.productId, 
+    }),
+  );
 
-    final res = await http.post(
-      Uri.parse('http://10.0.2.2:8080/messages'),
-      headers: {
-        'Authorization': 'Bearer $token',
-        'Content-Type': 'application/json',
-      },
-      body: jsonEncode({
-        'receiver_id': widget.receiverId,
-        'content': _controller.text,
-      }),
+  if (res.statusCode == 201) {
+    _controller.clear();
+    _loadThreadMessages();
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Помилка при надсиланні повідомлення')),
     );
-
-    if (res.statusCode == 201) {
-      _controller.clear();
-      await _loadThreadMessages();
-      _scrollDown();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Помилка при надсиланні повідомлення')),
-      );
-    }
   }
+}
+
+
 
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback((_) {

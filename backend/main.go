@@ -3,7 +3,6 @@ package main
 import (
 	"toyshop/controllers"
 	"toyshop/database"
-
 	"toyshop/middleware"
 
 	"github.com/gin-gonic/gin"
@@ -45,6 +44,7 @@ func main() {
 		auth.PUT("/orders/:id/cancel", controllers.CancelOrder)
 
 		auth.GET("/messages/:user_id", controllers.GetThreadMessages)
+		auth.GET("/messages/thread/:thread_id", controllers.GetMessagesByThread)
 
 		auth.POST("/messages", controllers.CreateMessage)
 		auth.GET("/messages", controllers.GetMyMessages)
