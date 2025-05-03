@@ -151,6 +151,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
+            if (widget.product['image_url'] != null)
+          GestureDetector(
+            onTap: () => showDialog(
+              context: context,
+              builder: (_) => Dialog(
+                child: InteractiveViewer(
+                  child: Image.network(widget.product['image_url']),
+                ),
+              ),
+            ),
+            child: Image.network(widget.product['image_url'], height: 200),
+          ),
             Text(widget.product['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
             Text('${widget.product['price']} грн', style: const TextStyle(fontSize: 18)),

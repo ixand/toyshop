@@ -97,7 +97,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   setState(() {
     _filteredProducts = results;
   });
-}
+  }
 
  void _showFilterDialog() {
   showDialog(
@@ -151,102 +151,130 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 _applyFilters(); // оновити список товарів
               },
               child: const Text('Застосувати'),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
+              ),
+            ],
+          ),
+        );
+     },
+    );
+ }
 
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Товари')),
-              floatingActionButton: FloatingActionButton(
-          onPressed: () async {
-            final result = await Navigator.push(
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(title: const Text('Товари')),
+    floatingActionButton: FloatingActionButton(
+      onPressed: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const CreateProductScreen()),
         );
 
         if (result == true) {
-          await _loadProducts(); 
+          await _loadProducts();
         }
-
-          },
-          child: const Icon(Icons.add),
-        ),
-
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(12),
-            child: TextField(
-              onChanged: (val) {
-                setState(() {
-                  _searchTerm = val;
-                  _applyFilters();
-                });
-              },
-              decoration: const InputDecoration(
-                hintText: 'Пошук товару...',
-                prefixIcon: Icon(Icons.search),
-                border: OutlineInputBorder(),
-              ),
+      },
+      child: const Icon(Icons.add),
+    ),
+    body: Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.all(12),
+          child: TextField(
+            onChanged: (val) {
+              setState(() {
+                _searchTerm = val;
+                _applyFilters();
+              });
+            },
+            decoration: const InputDecoration(
+              hintText: 'Пошук товару...',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                DropdownButton<String>(
-                  value: _sortOption,
-                  items: const [
-                    DropdownMenuItem(value: 'name', child: Text('За назвою')),
-                    DropdownMenuItem(value: 'price', child: Text('За ціною')),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      setState(() {
-                        _sortOption = value;
-                        _applyFilters();
-                      });
-                    }
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              DropdownButton<String>(
+                value: _sortOption,
+                items: const [
+                  DropdownMenuItem(value: 'name', child: Text('За назвою')),
+                  DropdownMenuItem(value: 'price', child: Text('За ціною')),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      _sortOption = value;
+                      _applyFilters();
+                    });
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.filter_alt),
+                onPressed: _showFilterDialog,
+              ),
+            ],
+          ),
+        ),
+        const Divider(),
+        Expanded(
+          child: _filteredProducts.isEmpty
+              ? const Center(child: Text('Немає товарів'))
+              : ListView.builder(
+                  itemCount: _filteredProducts.length,
+                  itemBuilder: (context, index) {
+                    final product = _filteredProducts[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      child: InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  ProductDetailScreen(product: product),
+                            ),
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: Row(
+                            children: [
+                              product['image_url'] != null && product['image_url'].toString().isNotEmpty
+                                ? Image.network(
+                                    product['image_url'],
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (context, error, stackTrace) {
+                                      return Image.asset(
+                                        'assets/images/placeholder.png',
+                                        height: 80,
+                                        width: 80,
+                                        fit: BoxFit.cover,
+                                      );
+                                    },
+                                  )
+                                : Image.asset(
+                                    'assets/images/placeholder.png',
+                                    height: 80,
+                                    width: 80,
+                                    fit: BoxFit.cover,
+                                  ),
+
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
                   },
                 ),
-                IconButton(
-                  icon: const Icon(Icons.filter_alt),
-                  onPressed: _showFilterDialog,
-                ),
-              ],
-            ),
-          ),
-          const Divider(),
-          Expanded(
-            child: _filteredProducts.isEmpty
-                ? const Center(child: Text('Немає товарів'))
-                : ListView.builder(
-                    itemCount: _filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = _filteredProducts[index];
-                      return ListTile(
-                        leading: const Icon(Icons.toys),
-                        title: Text(product['name'] ?? 'Без назви'),
-                        subtitle: Text('${product['price']} грн'),
-                        onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ProductDetailScreen(product: product),
-                                ),
-                              );
-                            },
-                      );
-                    },
-                  ),
           ),
         ],
       ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:toyshop/utils/shared_prefs.dart';
 import 'dart:convert';
 
@@ -40,10 +41,10 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
       if (_categories.isNotEmpty) {
         _selectedCategory = _categories.first['id'].toString();
-      }
-    });
+        }
+      });
+    }
   }
-}
 
   
   Future<void> _pickImage() async {
@@ -71,14 +72,19 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     if (token == null) {
     print('🔴 Токен відсутній');
     return;
-    }
+    } 
+
+        String imageUrl = '';
+        if (_imageFile != null) {
+        imageUrl = await uploadImage(_imageFile!);
+      }
 
     final Map<String, dynamic> body = {
     'name': _nameController.text,
     'description': _descController.text,
     'price': double.tryParse(_priceController.text) ?? 0.0, // ← це надсилає як число
     'category_id': int.tryParse(_selectedCategory ?? '') ?? 0,
-    'image_url': _imageFile?.path ?? '',
+    'image_url': imageUrl,
     };
 
     print('🟢 Дані для надсилання: ${jsonEncode(body)}');
@@ -104,6 +110,18 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       }
     }
 
+
+      Future<String> uploadImage(File imageFile) async {
+      final storageRef = FirebaseStorage.instance.ref();
+      final imagesRef = storageRef.child('product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+
+      final metadata = SettableMetadata(contentType: 'image/jpeg');
+      final uploadTask = imagesRef.putFile(imageFile, metadata);
+      
+      final snapshot = await uploadTask;
+      final downloadUrl = await snapshot.ref.getDownloadURL();
+      return downloadUrl;
+    }
 
 
   @override

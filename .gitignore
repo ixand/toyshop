@@ -39,3 +39,8 @@ docker-compose.override.yml
 .png
 .DS_Store
 Thumbs.db
+
+# Firebase
+frontend/android/app/google-services.json
+google-services.json
+
