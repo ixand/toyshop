@@ -141,90 +141,98 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 }
 
 
-  @override
-  Widget build(BuildContext context) {
-    final createdAt = widget.product['created_at']?.substring(0, 10) ?? 'невідомо';
+ @override
+Widget build(BuildContext context) {
+  final createdAt = widget.product['created_at']?.substring(0, 10) ?? 'невідомо';
+  final int maxQuantity = widget.product['stock_quantity'] ?? 1;
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Деталі товару')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            if (widget.product['image_url'] != null)
-          GestureDetector(
-            onTap: () => showDialog(
-              context: context,
-              builder: (_) => Dialog(
-                child: InteractiveViewer(
-                  child: Image.network(widget.product['image_url']),
+  return Scaffold(
+    appBar: AppBar(title: const Text('Деталі товару')),
+    body: Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: ListView(
+        children: [
+          if (widget.product['image_url'] != null && widget.product['image_url'].toString().startsWith('http'))
+            GestureDetector(
+              onTap: () => showDialog(
+                context: context,
+                builder: (_) => Dialog(
+                  child: InteractiveViewer(
+                    child: Image.network(widget.product['image_url']),
+                  ),
                 ),
               ),
+              child: Image.network(widget.product['image_url'], height: 200),
+            )
+          else
+            Image.asset('assets/images/placeholder.png', height: 200), // додай файл у assets
+
+          const SizedBox(height: 12),
+          Text(widget.product['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text('${widget.product['price']} грн', style: const TextStyle(fontSize: 18)),
+          const SizedBox(height: 8),
+          if (widget.product['description'] != null)
+            Text(widget.product['description']),
+          const SizedBox(height: 8),
+          Text('Автор: ${_ownerName ?? 'завантаження...'}'),
+          Text('Створено: $createdAt'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _addressController,
+            decoration: const InputDecoration(
+              labelText: 'Адреса доставки',
+              border: OutlineInputBorder(),
             ),
-            child: Image.network(widget.product['image_url'], height: 200),
           ),
-            Text(widget.product['name'], style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text('${widget.product['price']} грн', style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 8),
-            if (widget.product['description'] != null)
-              Text(widget.product['description']),
-            const SizedBox(height: 8),
-            Text('Автор: ${_ownerName ?? 'завантаження...'}'),
-            Text('Створено: ${_createdAt ?? 'невідомо'}'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: _addressController,
-              decoration: const InputDecoration(
-                labelText: 'Адреса доставки',
-                border: OutlineInputBorder(),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Text('Кількість:'),
+              const SizedBox(width: 12),
+              IconButton(
+                icon: const Icon(Icons.remove),
+                onPressed: () => setState(() {
+                  if (_quantity > 1) _quantity--;
+                }),
               ),
+              Text('$_quantity'),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: _quantity < maxQuantity
+                    ? () => setState(() {
+                        _quantity++;
+                      })
+                    : null,
+              ),
+              const SizedBox(width: 8),
+              Text('/ $maxQuantity'),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton.icon(
+            onPressed: () => _orderProduct(context),
+            icon: const Icon(Icons.shopping_cart),
+            label: const Text('Замовити'),
+          ),
+          const SizedBox(height: 24),
+          TextField(
+            controller: _messageController,
+            decoration: const InputDecoration(
+              labelText: 'Повідомлення автору',
+              border: OutlineInputBorder(),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                const Text('Кількість:'),
-                const SizedBox(width: 12),
-                IconButton(
-                  icon: const Icon(Icons.remove),
-                  onPressed: () => setState(() {
-                    if (_quantity > 1) _quantity--;
-                  }),
-                ),
-                Text('$_quantity'),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () => setState(() {
-                    _quantity++;
-                  }),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton.icon(
-              onPressed: () => _orderProduct(context),
-              icon: const Icon(Icons.shopping_cart),
-              label: const Text('Замовити'),
-            ),
-            const SizedBox(height: 24),
-      TextField(
-        controller: _messageController,
-        decoration: const InputDecoration(
-          labelText: 'Повідомлення автору',
-          border: OutlineInputBorder(),
-        ),
-        maxLines: 3,
+            maxLines: 3,
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () => _sendMessageToAuthor(),
+            icon: const Icon(Icons.message),
+            label: const Text('Надіслати повідомлення автору'),
+          ),
+        ],
       ),
-      const SizedBox(height: 12),
-      ElevatedButton.icon(
-        onPressed: () => _sendMessageToAuthor(),
-        icon: const Icon(Icons.message),
-        label: const Text('Надіслати повідомлення автору'),
-      ),
-
-          ],
-        ),
-      ),
-    );
-  }
+    ),
+  );
+}
 }

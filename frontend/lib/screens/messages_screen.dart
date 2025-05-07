@@ -124,22 +124,27 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   leading: const Icon(Icons.message),
                   title: Text(msg['content']),
                   subtitle: Text('Від: ${msg['sender_name'] ?? 'Невідомо'}'),
-                  onTap: () {
+                onTap: () {
                     if (_currentUserId != null) {
-                     final threadId = msg['thread_id'];
+                      final threadId = msg['thread_id'];
+                  
+                      // Визначаємо отримувача чату (той, хто не є ти)
+                      final isMeSender = msg['sender_id'] == _currentUserId;
+                      final receiverId = isMeSender ? msg['receiver_id'] : msg['sender_id'];
+                  
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ChatScreen(
-                              receiverId: msg['sender_id'],
-                              productId: msg['product_id'],
-                              threadId: msg['thread_id'],
-                            ),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => ChatScreen(
+                            receiverId: receiverId,
+                            productId: msg['product_id'],
+                            threadId: threadId,
                           ),
-                        );
-
+                        ),
+                      );
                     }
                   },
+
                 );
               },
             ),

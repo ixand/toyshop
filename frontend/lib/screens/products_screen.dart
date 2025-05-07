@@ -274,20 +274,29 @@ Widget build(BuildContext context) {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(
-                                      product['name'] ?? 'Без назви',
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    if (product['owner_name'] != null)
-                                      Text('Автор: ${product['owner_name']}'),
-                                    if (product['created_at'] != null)
-                                      Text('Додано: ${product['created_at'].substring(0, 10)}'),
-                                    if (product['location'] != null)
-                                      Text('Локація: ${product['location']}'),
-                                  ],
+                                        Text(
+                                          product['name'] ?? 'Без назви',
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${product['price']} грн',
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
+                                        ),
+                                        if (product['owner_name'] != null)
+                                          Text('Автор: ${product['owner_name']}'),
+                                        if (product['created_at'] != null)
+                                          Text('Додано: ${product['created_at'].substring(0, 10)}'),
+                                        if (product['location'] != null)
+                                          Text('Локація: ${product['location']}'),
+                                      ],
+
                                 ),
                               ),
                             ],
