@@ -8,6 +8,7 @@ type Product struct {
 	Description   string    `json:"description" gorm:"column:_description"`
 	Price         float64   `json:"price"`
 	ImageURL      string    `json:"image_url"`
+	Location      string    `json:"location" gorm:"column:_location"`
 	StockQuantity int       `json:"stock_quantity"`
 	CategoryID    uint      `json:"category_id"`
 	OwnerID       uint      `json:"owner_id"`

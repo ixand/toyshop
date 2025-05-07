@@ -18,6 +18,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   final _nameController = TextEditingController();
   final _descController = TextEditingController();
   final _priceController = TextEditingController();
+  final _locationController = TextEditingController();
   String? _selectedCategory;
   List<Map<String, dynamic>> _categories = [];
   File? _imageFile;
@@ -59,7 +60,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
     Future<void> _submitProduct() async {
     if (_nameController.text.trim().isEmpty ||
-    _descController.text.trim().isEmpty ||
+    _descController.text.trim().isEmpty || _locationController.text.trim().isEmpty ||
     double.tryParse(_priceController.text) == null ||
     double.parse(_priceController.text) <= 0) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -82,7 +83,8 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     final Map<String, dynamic> body = {
     'name': _nameController.text,
     'description': _descController.text,
-    'price': double.tryParse(_priceController.text) ?? 0.0, // ← це надсилає як число
+    'price': double.tryParse(_priceController.text) ?? 0.0, 
+    'location': _locationController.text,
     'category_id': int.tryParse(_selectedCategory ?? '') ?? 0,
     'image_url': imageUrl,
     };
@@ -117,7 +119,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
       final metadata = SettableMetadata(contentType: 'image/jpeg');
       final uploadTask = imagesRef.putFile(imageFile, metadata);
-      
+
       final snapshot = await uploadTask;
       final downloadUrl = await snapshot.ref.getDownloadURL();
       return downloadUrl;
@@ -147,6 +149,13 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: 'Ціна (грн)'),
             ),
+            TextField(
+                controller: _locationController,
+                decoration: const InputDecoration(
+                  labelText: 'Локація',
+                  border: OutlineInputBorder(),
+                ),
+              ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
                          value: _selectedCategory,

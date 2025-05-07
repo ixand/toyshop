@@ -46,11 +46,10 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	product.OwnerID = userID.(uint) // 🔹 Привʼязка до авторизованого користувача
+	product.OwnerID = userID.(uint)
 
-	result := database.DB.Create(&product)
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	if err := database.DB.Create(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
@@ -78,12 +77,16 @@ func UpdateProduct(c *gin.Context) {
 	product.ImageURL = input.ImageURL
 	product.StockQuantity = input.StockQuantity
 	product.CategoryID = input.CategoryID
-	product.OwnerID = input.OwnerID
+	product.Location = input.Location
 
-	database.DB.Save(&product)
+	if err := database.DB.Save(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, product)
 }
+
 func DeleteProduct(c *gin.Context) {
 	id := c.Param("id")
 
@@ -93,7 +96,10 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 
-	database.DB.Delete(&product)
+	if err := database.DB.Delete(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Товар видалено"})
 }

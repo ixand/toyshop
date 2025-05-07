@@ -31,6 +31,7 @@ CREATE TABLE products (
     _description TEXT,
     price NUMERIC(10, 2) NOT NULL,
     image_url TEXT,
+    _location TEXT,
     stock_quantity INT DEFAULT 0,
     category_id INT REFERENCES categories(id),
     owner_id INT REFERENCES users(id),
