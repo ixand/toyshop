@@ -4,6 +4,7 @@ CREATE TABLE users (
     _name TEXT NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
+    balance FLOAT,
     _role TEXT DEFAULT 'user',
     created_at TIMESTAMP DEFAULT NOW()
 );
