@@ -244,32 +244,55 @@ Widget build(BuildContext context) {
                         },
                         child: Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: Row(
+                         child: Row(
                             children: [
+                              // Картинка
                               product['image_url'] != null && product['image_url'].toString().isNotEmpty
-                                ? Image.network(
-                                    product['image_url'],
-                                    height: 80,
-                                    width: 80,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Image.asset(
-                                        'assets/images/placeholder.png',
-                                        height: 80,
-                                        width: 80,
-                                        fit: BoxFit.cover,
-                                      );
-                                    },
-                                  )
-                                : Image.asset(
-                                    'assets/images/placeholder.png',
-                                    height: 80,
-                                    width: 80,
-                                    fit: BoxFit.cover,
-                                  ),
-
+                                  ? Image.network(
+                                      product['image_url'],
+                                      height: 80,
+                                      width: 80,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (context, error, stackTrace) {
+                                        return Image.asset(
+                                          'assets/images/placeholder.png',
+                                          height: 80,
+                                          width: 80,
+                                          fit: BoxFit.cover,
+                                        );
+                                      },
+                                    )
+                                  : Image.asset(
+                                      'assets/images/placeholder.png',
+                                      height: 80,
+                                      width: 80,
+                                      fit: BoxFit.cover,
+                                    ),
+                              const SizedBox(width: 12),
+                              // Інформація
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      product['name'] ?? 'Без назви',
+                                      style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    if (product['owner_name'] != null)
+                                      Text('Автор: ${product['owner_name']}'),
+                                    if (product['created_at'] != null)
+                                      Text('Додано: ${product['created_at'].substring(0, 10)}'),
+                                    if (product['location'] != null)
+                                      Text('Локація: ${product['location']}'),
+                                  ],
+                                ),
+                              ),
                             ],
                           ),
+
                         ),
                       ),
                     );
