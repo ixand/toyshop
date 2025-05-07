@@ -14,14 +14,13 @@ var DB *gorm.DB
 
 func Connect() {
 	host := os.Getenv("PGHOST")
-	port := os.Getenv("PGPORT")
-	user := os.Getenv("POSTGRES_USER")
+	user := os.Getenv("PGUSER")
 	password := os.Getenv("PGPASSWORD")
 	dbname := os.Getenv("PGDATABASE")
+	port := os.Getenv("PGPORT")
 
-	dsn := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname,
-	)
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		host, user, password, dbname, port)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
@@ -31,7 +30,7 @@ func Connect() {
 	fmt.Println("✅ Підключення до бази даних успішне!")
 	DB = db
 
-	err = db.AutoMigrate(
+	db.AutoMigrate(
 		&models.User{},
 		&models.Product{},
 		&models.Category{},
@@ -40,7 +39,4 @@ func Connect() {
 		&models.Review{},
 		&models.Message{},
 	)
-	if err != nil {
-		log.Fatal("❌ Помилка при міграції:", err)
-	}
 }
