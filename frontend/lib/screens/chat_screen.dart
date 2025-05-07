@@ -5,9 +5,9 @@ import 'package:toyshop/utils/shared_prefs.dart';
 import 'dart:math';
 
 class ChatScreen extends StatefulWidget {
-  final int receiverId;
-  final int productId;
-  final String threadId;
+  final int? receiverId;
+  final int? productId;
+  final String? threadId;
 
   const ChatScreen({
     super.key,

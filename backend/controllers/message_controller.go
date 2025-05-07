@@ -75,6 +75,7 @@ func GetMyMessages(c *gin.Context) {
 	var messages []struct {
 		ID         uint   `json:"id"`
 		SenderID   uint   `json:"sender_id"`
+		ReceiverID uint   `json:"receiver_id"` // додано
 		SenderName string `json:"sender_name"`
 		Content    string `json:"content"`
 		CreatedAt  string `json:"created_at"`
@@ -84,7 +85,7 @@ func GetMyMessages(c *gin.Context) {
 
 	query := `
 	SELECT DISTINCT ON (thread_id) 
-		messages.id, messages.sender_id, users._name as sender_name, 
+		messages.id, messages.sender_id, messages.receiver_id, users._name as sender_name, 
 		messages.content, messages.created_at, messages.thread_id, messages.product_id
 	FROM messages
 	LEFT JOIN users ON users.id = messages.sender_id

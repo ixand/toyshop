@@ -144,7 +144,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
  @override
 Widget build(BuildContext context) {
   final createdAt = widget.product['created_at']?.substring(0, 10) ?? 'невідомо';
-  final int maxQuantity = widget.product['stock_quantity'] ?? 1;
+  final int maxQuantity = widget.product['stock_quantity'] as int? ?? 1;
+
 
   return Scaffold(
     appBar: AppBar(title: const Text('Деталі товару')),

@@ -72,30 +72,50 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             ),
           )
         : ListView.builder(
-            itemCount: _products.length,
-            itemBuilder: (context, index) {
-              final product = _products[index];
-              return ListTile(
-                title: Text(product['name']),
-                subtitle: Text('${product['price']} грн'),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.orange),
-                      onPressed: () {
-                        // TODO: Перехід на екран редагування
-                      },
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _deleteProduct(product['id']),
-                    ),
-                  ],
+  itemCount: _products.length,
+  itemBuilder: (context, index) {
+    final product = _products[index];
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      child: ListTile(
+        leading: product['image_url'] != null
+            ? ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.network(
+                  product['image_url'],
+                  width: 60,
+                  height: 60,
+                  fit: BoxFit.cover,
                 ),
-              );
-            },
-          ),
+              )
+            : const Icon(Icons.image, size: 48),
+        title: Text(product['name']),
+        subtitle: Text('${product['price']} грн'),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              icon: const Icon(Icons.edit, color: Colors.orange),
+              onPressed: () async {
+                    final updated = await Navigator.pushNamed(
+                      context,
+                      '/edit-product',
+                      arguments: product,
+                    );
+                    if (updated == true) _loadMyProducts();
+                  },
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () => _deleteProduct(product['id']),
+                      ),
+                    ],
+                  ),
+                ),
+            );
+          },
+        ),
+
       );
     }
 }

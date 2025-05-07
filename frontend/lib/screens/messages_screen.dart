@@ -124,26 +124,49 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   leading: const Icon(Icons.message),
                   title: Text(msg['content']),
                   subtitle: Text('Від: ${msg['sender_name'] ?? 'Невідомо'}'),
-                onTap: () {
-                    if (_currentUserId != null) {
-                      final threadId = msg['thread_id'];
-                  
-                      // Визначаємо отримувача чату (той, хто не є ти)
-                      final isMeSender = msg['sender_id'] == _currentUserId;
-                      final receiverId = isMeSender ? msg['receiver_id'] : msg['sender_id'];
-                  
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => ChatScreen(
-                            receiverId: receiverId,
-                            productId: msg['product_id'],
-                            threadId: threadId,
+              onTap: () {
+                      if (_currentUserId != null) {
+                        final threadId = msg['thread_id'];
+                    
+                        // 🛠️ Оголошуємо одразу
+                        final isMeSender = msg['sender_id'] == _currentUserId;
+                        final receiverId = isMeSender ? msg['receiver_id'] : msg['sender_id'];
+                    
+                        // ✅ Тепер перевірка після оголошення
+                        if (receiverId == null) {
+                          print('❌ receiverId is null');
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Неможливо відкрити чат: невідомий користувач')),
+                          );
+                          return;
+                        }
+                    
+                        final productId = msg['product_id'];
+                        if (productId == null) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Не вдалося відкрити чат: відсутній product_id')),
+                          );
+                          return;
+                        }
+                    
+                        print('Thread ID: ${msg['thread_id']}');
+                        print('Sender ID: ${msg['sender_id']}');
+                        print('Receiver ID: ${msg['receiver_id']}');
+                        print('Product ID: ${msg['product_id']}');
+                    
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => ChatScreen(
+                              receiverId: receiverId,
+                              productId: productId,
+                              threadId: threadId,
+                            ),
                           ),
-                        ),
-                      );
-                    }
-                  },
+                        );
+                      }
+                    },
+
 
                 );
               },

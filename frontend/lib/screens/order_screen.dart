@@ -37,28 +37,27 @@ class _OrderScreenState extends State<OrderScreen> {
   }
 
   Future<void> _cancelOrder(int orderId) async {
-    final token = await SharedPrefs.getToken();
-    final response = await http.put(
-      Uri.parse('http://10.0.2.2:8080/orders/$orderId/cancel'),
-      headers: {'Authorization': 'Bearer $token'},
-    );
+  final token = await SharedPrefs.getToken();
+  final response = await http.put(
+    Uri.parse('http://10.0.2.2:8080/orders/$orderId/cancel'),
+    headers: {'Authorization': 'Bearer $token'},
+  );
 
-    if (response.statusCode == 200) {
-      setState(() {
-        final index = _orders.indexWhere((o) => o['id'] == orderId);
-        if (index != -1) {
-          _orders[index]['status'] = 'скасовано';
-        }
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Замовлення скасовано')),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Помилка при скасуванні')),
-      );
-    }
+  print('🟡 Відправляємо PUT на: http://10.0.2.2:8080/orders/$orderId/cancel');
+
+
+  if (response.statusCode == 200) {
+    await _fetchOrders(); // Перезавантажити список замовлень
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Замовлення скасовано')),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Помилка: ${response.statusCode} - ${response.body}')),
+    );
   }
+}
+
 
   void _showOrderDetails(dynamic order) {
     showDialog(
@@ -142,12 +141,13 @@ class _OrderScreenState extends State<OrderScreen> {
                         Text('Статус: ${order['status']}'),
                       ],
                     ),
-                    trailing: order['status'] != 'скасовано'
-                        ? TextButton(
-                            onPressed: () => _cancelOrder(order['id']),
-                            child: const Text('Скасувати', style: TextStyle(color: Colors.red)),
-                          )
-                        : null,
+                    trailing: (order['status'] != 'скасований')
+                           ? TextButton(
+                               onPressed: () => _cancelOrder(order['id']),
+                               child: const Text('Скасувати', style: TextStyle(color: Colors.red)),
+                             )
+                           : null, 
+
                     onTap: () => _showOrderDetails(order),
                   ),
                 );
