@@ -65,19 +65,34 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	var input models.Product
+	var input map[string]interface{}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	product.Name = input.Name
-	product.Description = input.Description
-	product.Price = input.Price
-	product.ImageURL = input.ImageURL
-	product.StockQuantity = input.StockQuantity
-	product.CategoryID = input.CategoryID
-	product.Location = input.Location
+	// Оновлюємо лише передані поля
+	if name, ok := input["name"].(string); ok {
+		product.Name = name
+	}
+	if description, ok := input["description"].(string); ok {
+		product.Description = description
+	}
+	if price, ok := input["price"].(float64); ok {
+		product.Price = price
+	}
+	if imageURL, ok := input["image_url"].(string); ok {
+		product.ImageURL = imageURL
+	}
+	if location, ok := input["location"].(string); ok {
+		product.Location = location
+	}
+	if categoryID, ok := input["category_id"].(float64); ok {
+		product.CategoryID = uint(categoryID)
+	}
+	if stockQuantity, ok := input["stock_quantity"].(float64); ok {
+		product.StockQuantity = int(stockQuantity)
+	}
 
 	if err := database.DB.Save(&product).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
