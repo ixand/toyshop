@@ -26,18 +26,29 @@ class _EditProductScreenState extends State<EditProductScreen> {
   int? _productId;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  void initState() {
+  super.initState();
+
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    if (!mounted) return;
+
     final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>;
-    _productId = args['id'];
-    _nameController.text = args['name'];
-    _descController.text = args['description'] ?? '';
-    _priceController.text = args['price'].toString();
-    _locationController.text = args['location'] ?? '';
-    _selectedCategory = args['category_id'].toString();
-    _initialImageUrl = args['image_url'];
+
+    setState(() {
+      _productId = args['id'];
+      _nameController.text = args['name'];
+      _descController.text = args['description'] ?? '';
+      _priceController.text = args['price'].toString();
+      _locationController.text = args['location'] ?? '';
+      _selectedCategory = args['category_id'].toString();
+      _initialImageUrl = args['image_url'];
+    });
+
     _fetchCategories();
+    });
   }
+
+
 
   Future<void> _fetchCategories() async {
     final response = await http.get(Uri.parse('http://10.0.2.2:8080/categories'));
