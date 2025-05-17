@@ -174,8 +174,11 @@ class _EditProductScreenState extends State<EditProductScreen> {
             ),
             if (_imageFile != null)
               Image.file(_imageFile!, height: 150)
-            else if (_initialImageUrl != null)
-              Image.network(_initialImageUrl!, height: 150),
+            else if (_initialImageUrl != null && _initialImageUrl!.isNotEmpty)
+              Image.network(_initialImageUrl!, height: 150)
+            else
+              Image.asset('assets/images/placeholder.png', height: 150),
+
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _submitUpdate,

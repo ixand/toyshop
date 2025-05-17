@@ -72,23 +72,29 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
             ),
           )
         : ListView.builder(
-  itemCount: _products.length,
-  itemBuilder: (context, index) {
-    final product = _products[index];
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: ListTile(
-        leading: product['image_url'] != null
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  product['image_url'],
-                  width: 60,
-                  height: 60,
-                  fit: BoxFit.cover,
-                ),
-              )
-            : const Icon(Icons.image, size: 48),
+              itemCount: _products.length,
+              itemBuilder: (context, index) {
+                final product = _products[index];
+                return Card(
+                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: ListTile(
+                    leading: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: product['image_url'] != null && product['image_url'].toString().isNotEmpty
+                  ? Image.network(
+                      product['image_url'],
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      'assets/images/placeholder.png',
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+            ),
+
         title: Text(product['name']),
         subtitle: Text('${product['price']} грн'),
         trailing: Row(
