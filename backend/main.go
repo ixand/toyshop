@@ -6,9 +6,11 @@ import (
 	"toyshop/middleware"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	godotenv.Load()
 	r := gin.Default()
 
 	// підключення до БД
@@ -31,6 +33,7 @@ func main() {
 	r.POST("/login", controllers.Login)
 
 	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
+	r.POST("/create-payment-intent", controllers.CreatePaymentIntent)
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
@@ -48,6 +51,8 @@ func main() {
 
 		auth.POST("/messages", controllers.CreateMessage)
 		auth.GET("/messages", controllers.GetMyMessages)
+		auth.POST("/top-up", controllers.TopUpBalance)
+		auth.POST("/payment-success", controllers.PaymentSuccess)
 
 	}
 

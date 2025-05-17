@@ -2,11 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'screens/login_screen.dart';
 import 'screens/my_products_screen.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'screens/edit_product_screen.dart';
+import 'secrets.dart';
+
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Stripe.publishableKey = Secrets.stripePublishableKey; 
   await Firebase.initializeApp();
+  await Stripe.instance.applySettings();
+
   runApp(const MyApp());
 }
 

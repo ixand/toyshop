@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:toyshop/screens/login_screen.dart';
+import '../services/stripe_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -13,10 +15,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> user = {
-    'name': '',
-    'email': '',
-    'registered': '',
-    'avatar': null,
+  'name': '',
+  'email': '',
+  'registered': '',
+  'balance': 0.0,
+  'avatar': null,
   };
 
   String formattedDate = '';
@@ -26,6 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _fetchUserProfile();
   }
+
+  
 
   Future<void> _fetchUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
@@ -41,14 +46,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);    
       print('Отримані дані: $data');
+      
+
       final reg = data['created_at']?.substring(0, 10) ?? '';
 
       setState(() {
         user['name'] = data['name'] ?? '';
         user['email'] = data['email'] ?? '';
         user['registered'] = reg;
+        user['balance'] = data['balance'] ?? 0.0;
         formattedDate = reg;
       });
+
     }
   }
 
@@ -86,12 +95,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
             _buildProfileField('Імʼя', user['name'] ?? ''),
             const SizedBox(height: 12),
             _buildProfileField('Email', user['email'] ?? ''),
             const SizedBox(height: 12),
             _buildProfileField('Дата реєстрації', formattedDate),
+            const SizedBox(height: 12),
+            _buildProfileField('Баланс', '${user['balance'].toStringAsFixed(2)} ₴'),
             const SizedBox(height: 32),
             const Align(
               alignment: Alignment.centerLeft,
@@ -113,6 +123,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   icon: const Icon(Icons.list),
                   label: const Text('Мої оголошення'),
                 ),
+           const SizedBox(height: 16),
+           ElevatedButton.icon(
+            onPressed: () async {
+              try {
+                await StripeService.makeTestPayment(context,5000);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("Оплата успішна")),
+                );
+                await _fetchUserProfile(); // ← оновлення балансу
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text("Помилка: $e")),
+                );
+              }
+            },
+
+            icon: const Icon(Icons.payment),
+            label: const Text('Поповнити баланс (50 грн)'),
+          ),
+
 
             const SizedBox(height: 32),
             ElevatedButton.icon(

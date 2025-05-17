@@ -1,3 +1,12 @@
+
+DROP TABLE IF EXISTS messages;
+DROP TABLE IF EXISTS reviews;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS products;
+DROP TABLE IF EXISTS categories;
+DROP TABLE IF EXISTS users;
+
 -- Таблиця користувачів
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -78,4 +87,3 @@ CREATE TABLE messages (
     created_at TIMESTAMP DEFAULT NOW(),
     thread_id TEXT  -- унікальний ідентифікатор пари (наприклад: "1_2" або UUID)
 );
-

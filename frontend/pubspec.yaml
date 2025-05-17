@@ -36,6 +36,7 @@ dependencies:
   firebase_core: ^2.0.0
   firebase_storage: ^11.0.0
   cupertino_icons: ^1.0.8
+  flutter_stripe: ^10.0.0
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1

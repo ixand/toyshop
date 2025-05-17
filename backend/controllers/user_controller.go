@@ -210,6 +210,48 @@ func GetCurrentUser(c *gin.Context) {
 		"name":       user.Name,
 		"email":      user.Email,
 		"role":       user.Role,
-		"created_at": user.CreatedAt, // ← додай це поле
+		"balance":    user.Balance,
+		"created_at": user.CreatedAt,
+	})
+}
+
+type TopUpBalanceInput struct {
+	Amount float64 `json:"amount"`
+}
+
+func TopUpBalance(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизовано"})
+		return
+	}
+
+	var input TopUpBalanceInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Невірний формат JSON"})
+		return
+	}
+
+	if input.Amount <= 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Сума повинна бути більшою за 0"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Користувача не знайдено"})
+		return
+	}
+
+	user.Balance += input.Amount
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося оновити баланс"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Баланс успішно поповнено",
+		"balance": user.Balance,
 	})
 }

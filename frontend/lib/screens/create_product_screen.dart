@@ -119,7 +119,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F4FD),
+      backgroundColor: const Color.fromARGB(255, 248, 244, 255),
       appBar: AppBar(
         title: const Text('Новий товар'),
         backgroundColor: Colors.deepPurple,
@@ -154,7 +154,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 255, 165, 165)),
               onPressed: _pickImage,
               icon: const Icon(Icons.image),
               label: const Text('Завантажити фото'),
@@ -170,7 +170,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             ElevatedButton(
               onPressed: _submitProduct,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.white,
+                backgroundColor: const Color.fromARGB(255, 153, 255, 137),
                 minimumSize: const Size.fromHeight(50),
               ),
               child: const Text('Створити товар'),
@@ -189,7 +189,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: Colors.white,
+        fillColor: const Color.fromARGB(255, 203, 225, 252),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
