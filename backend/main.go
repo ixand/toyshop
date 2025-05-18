@@ -53,6 +53,7 @@ func main() {
 		auth.GET("/messages", controllers.GetMyMessages)
 		auth.POST("/top-up", controllers.TopUpBalance)
 		auth.POST("/payment-success", controllers.PaymentSuccess)
+		auth.POST("/orders/:id/pay", controllers.PayForOrder)
 
 	}
 

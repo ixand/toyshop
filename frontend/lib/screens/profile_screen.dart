@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:toyshop/screens/login_screen.dart';
+import 'package:toyshop/screens/top_up_screen.dart';
+import 'package:toyshop/screens/settings_screen.dart';
+import 'package:toyshop/screens/delivery_screen.dart';
 import '../services/stripe_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,11 +17,11 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> user = {
-  'name': '',
-  'email': '',
-  'registered': '',
-  'balance': 0.0,
-  'avatar': null,
+    'name': '',
+    'email': '',
+    'registered': '',
+    'balance': 0.0,
+    'avatar': null,
   };
 
   String formattedDate = '';
@@ -29,8 +31,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     _fetchUserProfile();
   }
-
-  
 
   Future<void> _fetchUserProfile() async {
     final prefs = await SharedPreferences.getInstance();
@@ -44,10 +44,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
 
     if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);    
-      print('Отримані дані: $data');
-      
-
+      final data = jsonDecode(response.body);
       final reg = data['created_at']?.substring(0, 10) ?? '';
 
       setState(() {
@@ -57,10 +54,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
         user['balance'] = data['balance'] ?? 0.0;
         formattedDate = reg;
       });
-
     }
   }
 
+  void _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('token');
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => const LoginScreen()),
+    );
+  }
+
+  Widget _buildProfileField(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text(value, style: const TextStyle(color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildActionButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return ElevatedButton(
+      onPressed: onTap,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 4,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 28),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(fontSize: 14)),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -87,7 +128,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: IconButton(
                         icon: const Icon(Icons.edit, color: Colors.white, size: 20),
                         onPressed: () {
-                          // Додати зміну аватарки
+                          // логіка зміни аватарки
                         },
                       ),
                     ),
@@ -95,92 +136,119 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ],
               ),
             ),
-            _buildProfileField('Імʼя', user['name'] ?? ''),
+            const SizedBox(height: 20),
+            _buildProfileField('Імʼя', user['name']),
             const SizedBox(height: 12),
-            _buildProfileField('Email', user['email'] ?? ''),
+            _buildProfileField('Email', user['email']),
             const SizedBox(height: 12),
             _buildProfileField('Дата реєстрації', formattedDate),
             const SizedBox(height: 12),
             _buildProfileField('Баланс', '${user['balance'].toStringAsFixed(2)} ₴'),
+
             const SizedBox(height: 32),
             const Align(
-              alignment: Alignment.centerLeft,
-              child: Text('Бейджі та досягнення', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              alignment: Alignment.topLeft,
+              child: Text(
+                'Бейджі та досягнення',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: const [
-                Icon(Icons.emoji_events, color: Colors.amber),
-                SizedBox(width: 8),
-                Text('Перший вхід у додаток')
-              ],
-            ),
-            const SizedBox(height: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/my-products');
-                  },
-                  icon: const Icon(Icons.list),
-                  label: const Text('Мої оголошення'),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('Досягнення'),
+                      content: const Text('Цей бейдж ви отримали за перший вхід у додаток.'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text('Закрити'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+                child: Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Colors.amber.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.emoji_events, color: Colors.amber),
                 ),
-           const SizedBox(height: 16),
-           ElevatedButton.icon(
-            onPressed: () async {
-              try {
-                await StripeService.makeTestPayment(context,5000);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("Оплата успішна")),
-                );
-                await _fetchUserProfile(); // ← оновлення балансу
-              } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Помилка: $e")),
-                );
-              }
-            },
+              ),
+            ),
 
-            icon: const Icon(Icons.payment),
-            label: const Text('Поповнити баланс (50 грн)'),
-          ),
+
 
 
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-             onPressed: _logout,
-            icon: const Icon(Icons.logout),
-            label: const Text('Вийти з акаунту'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.redAccent,
-              foregroundColor: Colors.white,
+
+            /// 2x2 кнопки у Grid
+            GridView.count(
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 1.8,
+              physics: const NeverScrollableScrollPhysics(),
+              children: [
+                _buildActionButton(
+                  icon: Icons.list,
+                  label: 'Мої оголошення',
+                  color: Colors.deepPurple,
+                  onTap: () => Navigator.pushNamed(context, '/my-products'),
                 ),
+               _buildActionButton(
+                icon: Icons.account_balance_wallet,
+                label: 'Поповнити',
+                color: Colors.purple,
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const TopUpScreen()),
+                  );
+
+                  if (result == true) {
+                    _fetchUserProfile(); // оновлення балансу після повернення
+                    }
+                  },
+                ),
+
+                _buildActionButton(
+                icon: Icons.local_shipping,
+                label: 'Логістика',
+                color: Colors.orange,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const DeliveryScreen()),
+                  );
+                },
+              ),
+
+                _buildActionButton(
+                icon: Icons.settings,
+                label: 'Налаштування',
+                color: Colors.grey.shade800,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                  );
+                },
+              ),
+
+              ],
             ),
           ],
         ),
       ),
-      
     );
   }
-
-  Widget _buildProfileField(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
-        Text(value, style: const TextStyle(color: Colors.grey)),
-      ],
-    );
-  }
-    void _logout() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.remove('token');
-
-  if (!mounted) return;
-
-  Navigator.pushReplacement(
-    context,
-    MaterialPageRoute(builder: (context) => const LoginScreen()),
-  );
-    }
-
-  
 }

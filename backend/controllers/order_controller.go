@@ -52,7 +52,6 @@ func CreateOrder(c *gin.Context) {
 	var totalPrice float64
 	var orderItems []models.OrderItem
 
-	// Починаємо транзакцію
 	tx := database.DB.Begin()
 
 	for _, item := range request.Items {
@@ -71,7 +70,6 @@ func CreateOrder(c *gin.Context) {
 			return
 		}
 
-		// Зменшуємо кількість товару на складі
 		product.StockQuantity -= item.Quantity
 		if err := tx.Save(&product).Error; err != nil {
 			tx.Rollback()
@@ -101,14 +99,15 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	for _, item := range orderItems {
-		item.OrderID = order.ID
-		if err := tx.Create(&item).Error; err != nil {
+	for i := range orderItems {
+		orderItems[i].OrderID = order.ID
+		if err := tx.Create(&orderItems[i]).Error; err != nil {
 			tx.Rollback()
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка при створенні позицій замовлення"})
 			return
 		}
 	}
+	order.Items = orderItems
 
 	tx.Commit()
 
@@ -121,13 +120,97 @@ func CreateOrder(c *gin.Context) {
 
 func CancelOrder(c *gin.Context) {
 	orderID := c.Param("id")
+	userID := c.MustGet("user_id").(uint)
 
-	if err := database.DB.Model(&models.Order{}).
-		Where("id = ?", orderID).
-		Update("_status", "скасований").Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося скасувати замовлення"})
+	var order models.Order
+	if err := database.DB.Preload("Items.Product").First(&order, orderID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Замовлення не знайдено"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Замовлення скасовано"})
+	if order.Status == "скасований" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Замовлення вже скасовано"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Користувача не знайдено"})
+		return
+	}
+
+	// Повернення коштів
+	if order.PaymentStatus == "оплачено" {
+		user.Balance += order.TotalPrice
+	}
+
+	// Повернення кількості товару
+	for _, item := range order.Items {
+		item.Product.StockQuantity += item.Quantity
+		if err := database.DB.Save(&item.Product).Error; err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка повернення товару"})
+			return
+		}
+	}
+
+	order.Status = "скасований"
+
+	// зберігаємо зміни
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося оновити баланс"})
+		return
+	}
+	if err := database.DB.Save(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося оновити замовлення"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Замовлення скасовано, кошти повернуто"})
+}
+
+func PayForOrder(c *gin.Context) {
+	orderID := c.Param("id")
+	userID := c.MustGet("user_id").(uint)
+
+	var order models.Order
+	if err := database.DB.Preload("Items").First(&order, orderID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Замовлення не знайдено"})
+		return
+	}
+
+	if order.UserID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Це не ваше замовлення"})
+		return
+	}
+
+	if order.PaymentStatus == "оплачено" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Замовлення вже оплачено"})
+		return
+	}
+
+	var user models.User
+	if err := database.DB.First(&user, userID).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Користувач не знайдений"})
+		return
+	}
+
+	if user.Balance < order.TotalPrice {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Недостатньо коштів"})
+		return
+	}
+
+	user.Balance -= order.TotalPrice
+	order.PaymentStatus = "оплачено"
+	order.Status = "в дорозі"
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка оновлення користувача"})
+		return
+	}
+	if err := database.DB.Save(&order).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка оновлення замовлення"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Оплата успішна"})
 }

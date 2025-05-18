@@ -1,7 +1,8 @@
-import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'package:toyshop/utils/shared_prefs.dart';
+import 'dart:convert';
 
 class OrderScreen extends StatefulWidget {
   const OrderScreen({super.key});
@@ -11,7 +12,7 @@ class OrderScreen extends StatefulWidget {
 }
 
 class _OrderScreenState extends State<OrderScreen> {
-  List<dynamic> _orders = [];
+  List<dynamic> orders = [];
 
   @override
   void initState() {
@@ -19,8 +20,14 @@ class _OrderScreenState extends State<OrderScreen> {
     _fetchOrders();
   }
 
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('token');
+  }
+
   Future<void> _fetchOrders() async {
-    final token = await SharedPrefs.getToken();
+    final token = await _getToken();
+    if (token == null) return;
 
     final response = await http.get(
       Uri.parse('http://10.0.2.2:8080/my-orders'),
@@ -29,130 +36,141 @@ class _OrderScreenState extends State<OrderScreen> {
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      print(jsonEncode(data));
-      setState(() => _orders = data);
-    } else {
-      setState(() => _orders = []);
+      setState(() => orders = data);
     }
   }
 
   Future<void> _cancelOrder(int orderId) async {
-  final token = await SharedPrefs.getToken();
-  final response = await http.put(
-    Uri.parse('http://10.0.2.2:8080/orders/$orderId/cancel'),
+    final token = await _getToken();
+    final response = await http.put(
+      Uri.parse('http://10.0.2.2:8080/orders/$orderId/cancel'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      _fetchOrders();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Замовлення скасовано')),
+      );
+    }
+  }
+
+Future<void> _payForOrder(dynamic order) async {
+  final token = await _getToken();
+  final response = await http.post(
+    Uri.parse('http://10.0.2.2:8080/orders/${order['id']}/pay'),
     headers: {'Authorization': 'Bearer $token'},
   );
 
-  print('🟡 Відправляємо PUT на: http://10.0.2.2:8080/orders/$orderId/cancel');
-
+  if (response.statusCode == 400) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Недостатньо коштів. Поповніть баланс.')),
+    );
+    Navigator.pushNamed(context, '/top-up');
+    return;
+  }
 
   if (response.statusCode == 200) {
-    await _fetchOrders(); // Перезавантажити список замовлень
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Замовлення скасовано')),
+      const SnackBar(content: Text('Оплата успішна!')),
     );
+
+    // 🔁 Тут одразу оновлюємо UI
+    await _fetchOrders(); // <<< оновлення ДО переходу
+
+    // 🔁 Потім переходимо
+    await Navigator.pushNamed(context, '/delivery');
   } else {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Помилка: ${response.statusCode} - ${response.body}')),
+      const SnackBar(content: Text('Помилка оплати.')),
     );
   }
 }
 
 
-  void _showOrderDetails(dynamic order) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Деталі замовлення'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ...order['items'].map<Widget>((item) {
-                final product = item['product'];
-                return ListTile(
-                  leading: product['image_url'] != null
-                      ? Image.network(product['image_url'], width: 50, height: 50, fit: BoxFit.cover)
-                      : const Icon(Icons.image),
-                  title: Text(product['name'] ?? 'Без назви'),
-                  subtitle: Text('Кількість: ${item['quantity']}'),
-                  trailing: Text('${item['unit_price']} грн'),
-                );
-              }).toList(),
-              const SizedBox(height: 12),
-              Text('Адреса доставки: ${order['shipping_address']}'),
-              Text('Оплата: ${order['payment_status']}'),
-              Text('Статус: ${order['status']}'),
-              Text('Сума: ${order['total_price']} грн'),
-              if (order['created_at'] != null)
-                Text('Дата: ${order['created_at'].substring(0, 16)}'),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Закрити'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Мої замовлення')),
-      body: _orders.isEmpty
-          ? const Center(child: Text('Немає замовлень'))
+      body: orders.isEmpty
+          ? const Center(child: Text('У вас ще немає замовлень.'))
           : ListView.builder(
-              itemCount: _orders.length,
+              padding: const EdgeInsets.all(16),
+              itemCount: orders.length,
               itemBuilder: (context, index) {
-                final order = _orders[index];
-                final firstItem = order['items'].isNotEmpty ? order['items'][0] : null;
-                final product = firstItem != null ? firstItem['product'] : null;
-
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 3,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    leading: product != null && product['image_url'] != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: Image.network(
-                              product['image_url'],
-                              width: 60,
-                              height: 60,
-                              fit: BoxFit.cover,
-                            ),
-                          )
-                        : const Icon(Icons.image, size: 48),
-                    title: Text(
-                      product != null ? product['name'] ?? 'Товар' : 'Товар',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Сума: ${order['total_price']} грн'),
-                        Text('Статус: ${order['status']}'),
-                      ],
-                    ),
-                    trailing: (order['status'] != 'скасований')
-                           ? TextButton(
-                               onPressed: () => _cancelOrder(order['id']),
-                               child: const Text('Скасувати', style: TextStyle(color: Colors.red)),
-                             )
-                           : null, 
-
-                    onTap: () => _showOrderDetails(order),
-                  ),
-                );
+                final order = orders[index];
+                return _buildOrderCard(order);
               },
             ),
+    );
+  }
+
+  Widget _buildOrderCard(dynamic order) {
+    final items = order['items'];
+    if (items == null || items.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final item = items[0];
+    final product = item['product'];
+
+    final isCanceled = order['status'] == 'скасований';
+    final isPaid = order['payment_status'] == 'оплачено';
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      elevation: 3,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Image.network(product['image_url'], width: 64, height: 64, fit: BoxFit.cover),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(product['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('Кількість: ${item['quantity']}'),
+                      Text('Сума: ₴${order['total_price']}'),
+                      Text('Оплата: ${order['payment_status']}'),
+                      Text('Статус: ${order['status']}'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (!isPaid && !isCanceled)
+                  ElevatedButton(
+                    onPressed: () => _payForOrder(order),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text('Оплатити'),
+                  ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: isCanceled ? null : () => _cancelOrder(order['id']),
+                  child: Text(
+                    isCanceled ? 'Скасовано' : 'Скасувати',
+                    style: TextStyle(
+                      color: isCanceled ? Colors.grey : Colors.redAccent,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
