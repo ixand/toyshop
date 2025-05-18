@@ -4,15 +4,23 @@ import 'screens/login_screen.dart';
 import 'screens/my_products_screen.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'screens/edit_product_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'secrets.dart';
 
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+  await dotenv.load();
+  print('✅ .env loaded, GOOGLE_API_KEY: ${dotenv.env['GOOGLE_API_KEY']}');
+  } catch (e) {
+  print('❌ Failed to load .env: $e');
+  }
+
   Stripe.publishableKey = Secrets.stripePublishableKey; 
   await Firebase.initializeApp();
   await Stripe.instance.applySettings();
-
+  print('🔑 API KEY: ${dotenv.env['GOOGLE_API_KEY']}');
   runApp(const MyApp());
 }
 

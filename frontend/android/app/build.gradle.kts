@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.frontend"
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -30,8 +30,9 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+    jvmTarget = "11"
     }
+
 }
 
 flutter {

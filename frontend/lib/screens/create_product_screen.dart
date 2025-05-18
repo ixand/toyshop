@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:toyshop/utils/shared_prefs.dart';
+import 'package:toyshop/screens/location_picker_screen.dart';
 import 'dart:convert';
 
 class CreateProductScreen extends StatefulWidget {
@@ -51,6 +52,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() => _imageFile = File(pickedFile.path));
+    }
+  }
+
+  Future<void> _selectLocation() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LocationPickerScreen()),
+    );
+    if (result != null && result['address'] != null) {
+      _locationController.text = result['address'];
     }
   }
 
@@ -136,7 +147,18 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             const SizedBox(height: 12),
             _buildTextField(_quantityController, 'Кількість', keyboardType: TextInputType.number),
             const SizedBox(height: 12),
-            _buildTextField(_locationController, 'Локація'),
+            TextField(
+              controller: _locationController,
+              readOnly: true,
+              onTap: _selectLocation,
+              decoration: InputDecoration(
+                labelText: 'Локація (оберіть на мапі)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                suffixIcon: const Icon(Icons.map),
+                fillColor: const Color.fromARGB(255, 203, 225, 252),
+                filled: true,
+              ),
+            ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               value: _selectedCategory,
@@ -154,7 +176,7 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: const Color.fromARGB(255, 255, 165, 165)),
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple.shade100),
               onPressed: _pickImage,
               icon: const Icon(Icons.image),
               label: const Text('Завантажити фото'),
@@ -167,13 +189,16 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               ),
             ],
             const SizedBox(height: 24),
-            ElevatedButton(
+            ElevatedButton.icon(
               onPressed: _submitProduct,
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color.fromARGB(255, 153, 255, 137),
+                backgroundColor: Colors.green.shade400,
+                foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Створити товар'),
+              icon: const Icon(Icons.check),
+              label: const Text('Створити товар'),
             ),
           ],
         ),

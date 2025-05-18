@@ -3,7 +3,6 @@ import 'package:toyshop/screens/login_screen.dart';
 import 'package:toyshop/screens/top_up_screen.dart';
 import 'package:toyshop/screens/settings_screen.dart';
 import 'package:toyshop/screens/delivery_screen.dart';
-import '../services/stripe_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';

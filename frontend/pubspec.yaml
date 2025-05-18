@@ -37,6 +37,13 @@ dependencies:
   firebase_storage: ^11.0.0
   cupertino_icons: ^1.0.8
   flutter_stripe: ^10.0.0
+  google_maps_flutter: ^2.2.5
+  geocoding: ^2.1.0
+  geolocator: ^14.0.0
+  google_maps_webservice: ^0.0.19
+  google_api_headers: ^4.4.5
+  google_place: ^0.4.7
+  flutter_dotenv: ^5.0.2
 
 dev_dependencies:
   flutter_launcher_icons: ^0.13.1
@@ -63,6 +70,7 @@ flutter:
   assets:
     - assets/user_default.png
     - assets/images/placeholder.png
+    - .env
   
   # To add assets to your application, add an assets section, like this:
   # assets:
