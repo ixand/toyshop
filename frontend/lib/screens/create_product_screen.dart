@@ -32,14 +32,14 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
   }
 
   Future<void> _fetchCategories() async {
-    final response = await http.get(Uri.parse('http://10.0.2.2:8080/categories'));
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8080/categories'),
+    );
     if (response.statusCode == 200) {
       final List<dynamic> data = jsonDecode(response.body);
       setState(() {
-        _categories = data.map((e) => {
-              'id': e['id'],
-              'name': e['name'],
-            }).toList();
+        _categories =
+            data.map((e) => {'id': e['id'], 'name': e['name']}).toList();
         if (_categories.isNotEmpty) {
           _selectedCategory = _categories.first['id'].toString();
         }
@@ -122,8 +122,13 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
 
   Future<String> uploadImage(File imageFile) async {
     final storageRef = FirebaseStorage.instance.ref();
-    final fileRef = storageRef.child('product_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    await fileRef.putFile(imageFile, SettableMetadata(contentType: 'image/jpeg'));
+    final fileRef = storageRef.child(
+      'product_images/${DateTime.now().millisecondsSinceEpoch}.jpg',
+    );
+    await fileRef.putFile(
+      imageFile,
+      SettableMetadata(contentType: 'image/jpeg'),
+    );
     return await fileRef.getDownloadURL();
   }
 
@@ -143,9 +148,17 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
             const SizedBox(height: 12),
             _buildTextField(_descController, 'Опис'),
             const SizedBox(height: 12),
-            _buildTextField(_priceController, 'Ціна (грн)', keyboardType: TextInputType.number),
+            _buildTextField(
+              _priceController,
+              'Ціна (грн)',
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 12),
-            _buildTextField(_quantityController, 'Кількість', keyboardType: TextInputType.number),
+            _buildTextField(
+              _quantityController,
+              'Кількість',
+              keyboardType: TextInputType.number,
+            ),
             const SizedBox(height: 12),
             TextField(
               controller: _locationController,
@@ -153,7 +166,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
               onTap: _selectLocation,
               decoration: InputDecoration(
                 labelText: 'Локація (оберіть на мапі)',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 suffixIcon: const Icon(Icons.map),
                 fillColor: const Color.fromARGB(255, 203, 225, 252),
                 filled: true,
@@ -166,17 +181,22 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                 labelText: 'Категорія',
                 border: OutlineInputBorder(),
               ),
-              items: _categories
-                  .map((cat) => DropdownMenuItem(
-                        value: cat['id'].toString(),
-                        child: Text(cat['name']),
-                      ))
-                  .toList(),
+              items:
+                  _categories
+                      .map(
+                        (cat) => DropdownMenuItem(
+                          value: cat['id'].toString(),
+                          child: Text(cat['name']),
+                        ),
+                      )
+                      .toList(),
               onChanged: (val) => setState(() => _selectedCategory = val),
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.deepPurple.shade100),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 153, 99, 252),
+              ),
               onPressed: _pickImage,
               icon: const Icon(Icons.image),
               label: const Text('Завантажити фото'),
@@ -195,7 +215,9 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
                 backgroundColor: Colors.green.shade400,
                 foregroundColor: Colors.white,
                 minimumSize: const Size.fromHeight(50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               icon: const Icon(Icons.check),
               label: const Text('Створити товар'),
@@ -206,15 +228,18 @@ class _CreateProductScreenState extends State<CreateProductScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {TextInputType keyboardType = TextInputType.text}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    TextInputType keyboardType = TextInputType.text,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         filled: true,
-        fillColor: const Color.fromARGB(255, 203, 225, 252),
+        fillColor: const Color.fromARGB(255, 168, 207, 255),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );

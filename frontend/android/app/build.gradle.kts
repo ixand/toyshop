@@ -1,3 +1,12 @@
+import java.util.Properties
+import java.io.FileInputStream
+
+val localProperties = Properties()
+val envFile = rootProject.file(".env")
+if (envFile.exists()) {
+    localProperties.load(FileInputStream(envFile))
+}
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -11,6 +20,7 @@ android {
     ndkVersion = "29.0.13113456"
 
     defaultConfig {
+        manifestPlaceholders["GOOGLE_API_KEY"] = localProperties.getProperty("GOOGLE_API_KEY") ?: ""
         applicationId = "com.example.frontend"
         minSdk = 23
         targetSdk = flutter.targetSdkVersion

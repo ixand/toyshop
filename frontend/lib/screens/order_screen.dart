@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -49,59 +48,59 @@ class _OrderScreenState extends State<OrderScreen> {
 
     if (response.statusCode == 200) {
       _fetchOrders();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Замовлення скасовано')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Замовлення скасовано')));
     }
   }
 
-Future<void> _payForOrder(dynamic order) async {
-  final token = await _getToken();
-  final response = await http.post(
-    Uri.parse('http://10.0.2.2:8080/orders/${order['id']}/pay'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
-
-  if (response.statusCode == 400) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Недостатньо коштів. Поповніть баланс.')),
+  Future<void> _payForOrder(dynamic order) async {
+    final token = await _getToken();
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8080/orders/${order['id']}/pay'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-    Navigator.pushNamed(context, '/top-up');
-    return;
+
+    if (response.statusCode == 400) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Недостатньо коштів. Поповніть баланс.')),
+      );
+      Navigator.pushNamed(context, '/top-up');
+      return;
+    }
+
+    if (response.statusCode == 200) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Оплата успішна!')));
+
+      // 🔁 Тут одразу оновлюємо UI
+      await _fetchOrders(); // <<< оновлення ДО переходу
+
+      // 🔁 Потім переходимо
+      await Navigator.pushNamed(context, '/delivery');
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Помилка оплати.')));
+    }
   }
-
-  if (response.statusCode == 200) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Оплата успішна!')),
-    );
-
-    // 🔁 Тут одразу оновлюємо UI
-    await _fetchOrders(); // <<< оновлення ДО переходу
-
-    // 🔁 Потім переходимо
-    await Navigator.pushNamed(context, '/delivery');
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Помилка оплати.')),
-    );
-  }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Мої замовлення')),
-      body: orders.isEmpty
-          ? const Center(child: Text('У вас ще немає замовлень.'))
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: orders.length,
-              itemBuilder: (context, index) {
-                final order = orders[index];
-                return _buildOrderCard(order);
-              },
-            ),
+      body:
+          orders.isEmpty
+              ? const Center(child: Text('У вас ще немає замовлень.'))
+              : ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: orders.length,
+                itemBuilder: (context, index) {
+                  final order = orders[index];
+                  return _buildOrderCard(order);
+                },
+              ),
     );
   }
 
@@ -127,13 +126,21 @@ Future<void> _payForOrder(dynamic order) async {
           children: [
             Row(
               children: [
-                Image.network(product['image_url'], width: 64, height: 64, fit: BoxFit.cover),
+                Image.network(
+                  product['image_url'],
+                  width: 64,
+                  height: 64,
+                  fit: BoxFit.cover,
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(product['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text(
+                        product['name'],
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                       Text('Кількість: ${item['quantity']}'),
                       Text('Сума: ₴${order['total_price']}'),
                       Text('Оплата: ${order['payment_status']}'),
@@ -158,7 +165,8 @@ Future<void> _payForOrder(dynamic order) async {
                   ),
                 const SizedBox(width: 12),
                 TextButton(
-                  onPressed: isCanceled ? null : () => _cancelOrder(order['id']),
+                  onPressed:
+                      isCanceled ? null : () => _cancelOrder(order['id']),
                   child: Text(
                     isCanceled ? 'Скасовано' : 'Скасувати',
                     style: TextStyle(

@@ -115,9 +115,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: user['avatar'] != null
-                        ? NetworkImage(user['avatar']!)
-                        : const AssetImage('assets/user_default.png') as ImageProvider,
+                    backgroundImage:
+                        user['avatar'] != null
+                            ? NetworkImage(user['avatar']!)
+                            : const AssetImage('assets/user_default.png')
+                                as ImageProvider,
                   ),
                   Positioned(
                     bottom: 0,
@@ -125,7 +127,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     child: CircleAvatar(
                       backgroundColor: Colors.blueAccent,
                       child: IconButton(
-                        icon: const Icon(Icons.edit, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.edit,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         onPressed: () {
                           // логіка зміни аватарки
                         },
@@ -142,7 +148,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 12),
             _buildProfileField('Дата реєстрації', formattedDate),
             const SizedBox(height: 12),
-            _buildProfileField('Баланс', '${user['balance'].toStringAsFixed(2)} ₴'),
+            _buildProfileField(
+              'Баланс',
+              '${user['balance'].toStringAsFixed(2)} ₴',
+            ),
 
             const SizedBox(height: 32),
             const Align(
@@ -159,16 +168,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 onTap: () {
                   showDialog(
                     context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Досягнення'),
-                      content: const Text('Цей бейдж ви отримали за перший вхід у додаток.'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Закрити'),
+                    builder:
+                        (context) => AlertDialog(
+                          title: const Text('Досягнення'),
+                          content: const Text(
+                            'Цей бейдж ви отримали за перший вхід у додаток.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('Закрити'),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                   );
                 },
                 child: Container(
@@ -182,9 +194,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
-
-
 
             const SizedBox(height: 32),
 
@@ -203,46 +212,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   color: Colors.deepPurple,
                   onTap: () => Navigator.pushNamed(context, '/my-products'),
                 ),
-               _buildActionButton(
-                icon: Icons.account_balance_wallet,
-                label: 'Поповнити',
-                color: Colors.purple,
-                onTap: () async {
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const TopUpScreen()),
-                  );
+                _buildActionButton(
+                  icon: Icons.account_balance_wallet,
+                  label: 'Поповнити',
+                  color: Colors.purple,
+                  onTap: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const TopUpScreen()),
+                    );
 
-                  if (result == true) {
-                    _fetchUserProfile(); // оновлення балансу після повернення
+                    if (result == true) {
+                      _fetchUserProfile(); // оновлення балансу після повернення
                     }
                   },
                 ),
 
                 _buildActionButton(
-                icon: Icons.local_shipping,
-                label: 'Логістика',
-                color: Colors.orange,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const DeliveryScreen()),
-                  );
-                },
-              ),
+                  icon: Icons.local_shipping,
+                  label: 'Логістика',
+                  color: Colors.orange,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const DeliveryScreen()),
+                    );
+                  },
+                ),
 
                 _buildActionButton(
-                icon: Icons.settings,
-                label: 'Налаштування',
-                color: Colors.grey.shade800,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                  );
-                },
-              ),
-
+                  icon: Icons.settings,
+                  label: 'Налаштування',
+                  color: Colors.grey.shade800,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                    );
+                  },
+                ),
               ],
             ),
           ],

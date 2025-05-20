@@ -15,34 +15,32 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
 
   bool _hasProducts = true;
 
-
   @override
   void initState() {
     super.initState();
     _loadMyProducts();
   }
 
-    Future<void> _loadMyProducts() async {
-      final token = await SharedPrefs.getToken();
-      final response = await http.get(
-        Uri.parse('http://10.0.2.2:8080/my-products'),
-        headers: {'Authorization': 'Bearer $token'},
-      );
+  Future<void> _loadMyProducts() async {
+    final token = await SharedPrefs.getToken();
+    final response = await http.get(
+      Uri.parse('http://10.0.2.2:8080/my-products'),
+      headers: {'Authorization': 'Bearer $token'},
+    );
 
-      if (response.statusCode == 200) {
-        final all = jsonDecode(response.body);
-        setState(() {
-          _products = all;
-          _hasProducts = all.isNotEmpty;
-        });
-      } else {
-        setState(() {
-          _products = [];
-          _hasProducts = false;
-        });
-      }
+    if (response.statusCode == 200) {
+      final all = jsonDecode(response.body);
+      setState(() {
+        _products = all;
+        _hasProducts = all.isNotEmpty;
+      });
+    } else {
+      setState(() {
+        _products = [];
+        _hasProducts = false;
+      });
     }
-
+  }
 
   void _deleteProduct(int id) async {
     final token = await SharedPrefs.getToken();
@@ -54,9 +52,9 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
     if (response.statusCode == 200) {
       _loadMyProducts();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Помилка при видаленні')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Помилка при видаленні')));
     }
   }
 
@@ -64,64 +62,69 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Мої оголошення')),
-      body: _products.isEmpty
-        ? const Center(
-            child: Text(
-              'У вас ще немає оголошень',
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          )
-        : ListView.builder(
-              itemCount: _products.length,
-              itemBuilder: (context, index) {
-                final product = _products[index];
-                return Card(
-                  margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: ListTile(
-                    leading: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: product['image_url'] != null && product['image_url'].toString().isNotEmpty
-                  ? Image.network(
-                      product['image_url'],
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    )
-                  : Image.asset(
-                      'assets/images/placeholder.png',
-                      width: 60,
-                      height: 60,
-                      fit: BoxFit.cover,
-                    ),
-            ),
-
-        title: Text(product['name']),
-        subtitle: Text('${product['price']} грн'),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, color: Colors.orange),
-              onPressed: () async {
-                    final updated = await Navigator.pushNamed(
-                      context,
-                      '/edit-product',
-                      arguments: product,
-                    );
-                    if (updated == true) _loadMyProducts();
-                  },
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, color: Colors.red),
-              onPressed: () => _deleteProduct(product['id']),
-                      ),
-                    ],
-                  ),
+      body:
+          _products.isEmpty
+              ? const Center(
+                child: Text(
+                  'У вас ще немає оголошень',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
                 ),
-            );
-          },
-        ),
+              )
+              : ListView.builder(
+                itemCount: _products.length,
+                itemBuilder: (context, index) {
+                  final product = _products[index];
+                  return Card(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    child: ListTile(
+                      leading: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child:
+                            product['image_url'] != null &&
+                                    product['image_url'].toString().isNotEmpty
+                                ? Image.network(
+                                  product['image_url'],
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                )
+                                : Image.asset(
+                                  'assets/images/placeholder.png',
+                                  width: 60,
+                                  height: 60,
+                                  fit: BoxFit.cover,
+                                ),
+                      ),
 
-      );
-    }
+                      title: Text(product['name']),
+                      subtitle: Text('${product['price']} грн'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            onPressed: () async {
+                              final updated = await Navigator.pushNamed(
+                                context,
+                                '/edit-product',
+                                arguments: product,
+                              );
+                              if (updated == true) _loadMyProducts();
+                            },
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.red),
+                            onPressed: () => _deleteProduct(product['id']),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+    );
+  }
 }

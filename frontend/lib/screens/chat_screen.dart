@@ -19,7 +19,6 @@ class ChatScreen extends StatefulWidget {
   State<ChatScreen> createState() => _ChatScreenState();
 }
 
-
 class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> _messages = [];
   final _controller = TextEditingController();
@@ -46,57 +45,57 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadThreadMessages() async {
-  final token = await SharedPrefs.getToken();
-  final res = await http.get(
-    Uri.parse('http://10.0.2.2:8080/messages/thread/${widget.threadId}'),
-    headers: {'Authorization': 'Bearer $token'},
-  );
-
-  if (res.statusCode == 200) {
-    final data = jsonDecode(res.body);
-    setState(() => _messages = data);
-    _scrollDown();
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Помилка при завантаженні чату')),
+    final token = await SharedPrefs.getToken();
+    final res = await http.get(
+      Uri.parse('http://10.0.2.2:8080/messages/thread/${widget.threadId}'),
+      headers: {'Authorization': 'Bearer $token'},
     );
-  }
-}
 
-Future<void> _sendMessage() async {
-  final token = await SharedPrefs.getToken();
-
-  if (_currentUserId == widget.receiverId) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Ви не можете надіслати повідомлення самому собі')),
-    );
-    return;
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+      setState(() => _messages = data);
+      _scrollDown();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Помилка при завантаженні чату')),
+      );
+    }
   }
 
-  final res = await http.post(
-    Uri.parse('http://10.0.2.2:8080/messages'),
-    headers: {
-      'Authorization': 'Bearer $token',
-      'Content-Type': 'application/json',
-    },
-    body: jsonEncode({
-      'receiver_id': widget.receiverId,
-      'content': _controller.text,
-      'product_id': widget.productId, 
-    }),
-  );
+  Future<void> _sendMessage() async {
+    final token = await SharedPrefs.getToken();
 
-  if (res.statusCode == 201) {
-    _controller.clear();
-    _loadThreadMessages();
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Помилка при надсиланні повідомлення')),
+    if (_currentUserId == widget.receiverId) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ви не можете надіслати повідомлення самому собі'),
+        ),
+      );
+      return;
+    }
+
+    final res = await http.post(
+      Uri.parse('http://10.0.2.2:8080/messages'),
+      headers: {
+        'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode({
+        'receiver_id': widget.receiverId,
+        'content': _controller.text,
+        'product_id': widget.productId,
+      }),
     );
+
+    if (res.statusCode == 201) {
+      _controller.clear();
+      _loadThreadMessages();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Помилка при надсиланні повідомлення')),
+      );
+    }
   }
-}
-
-
 
   void _scrollDown() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -133,10 +132,17 @@ Future<void> _sendMessage() async {
                 final isMine = msg['sender_id'] == _currentUserId;
 
                 return Container(
-                  alignment: isMine ? Alignment.centerRight : Alignment.centerLeft,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  alignment:
+                      isMine ? Alignment.centerRight : Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: isMine ? Colors.blue[100] : Colors.grey[300],
                       borderRadius: BorderRadius.circular(10),
@@ -151,7 +157,10 @@ Future<void> _sendMessage() async {
                         const SizedBox(height: 4),
                         Text(
                           msg['created_at']?.substring(0, 16) ?? '',
-                          style: const TextStyle(fontSize: 10, color: Colors.black54),
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.black54,
+                          ),
                         ),
                       ],
                     ),
@@ -181,7 +190,7 @@ Future<void> _sendMessage() async {
                 ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
