@@ -15,6 +15,7 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   String? _ownerName;
+  Map<String, dynamic>? _owner;
   final _messageController = TextEditingController();
 
   @override
@@ -34,6 +35,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
       if (owner != null) {
         setState(() {
           _ownerName = owner['name'];
+          _owner = owner;
         });
       }
     }
@@ -72,7 +74,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget build(BuildContext context) {
     final createdAt =
         widget.product['created_at']?.substring(0, 10) ?? 'невідомо';
-    final int stock = widget.product['stock_quantity'] as int? ?? 0;
+    final int stock = widget.product['stock_quantity'] as int? ?? 1;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Деталі товару')),
@@ -82,86 +84,73 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                // 🧸 Фото
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child:
-                      widget.product['image_url'] != null
-                          ? Image.network(
-                            widget.product['image_url'],
-                            height: 200,
-                            fit: BoxFit.cover,
-                          )
-                          : Image.asset(
-                            'assets/images/placeholder.png',
-                            height: 200,
-                          ),
-                ),
+                // Фото
+                if (widget.product['image_url'] != null &&
+                    widget.product['image_url'].toString().startsWith('http'))
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      widget.product['image_url'],
+                      height: 220,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else
+                  Image.asset('assets/images/placeholder.png', height: 220),
+
                 const SizedBox(height: 16),
 
-                // 👤 Автор
-                GestureDetector(
+                // Автор
+                InkWell(
                   onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder:
-                            (_) => AuthorProfileScreen(
-                              ownerId: widget.product['owner_id'],
-                            ),
-                      ),
-                    );
+                    if (_owner != null) {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder:
+                              (_) => AuthorProfileScreen(
+                                ownerId: widget.product['owner_id'],
+                              ),
+                        ),
+                      );
+                    }
                   },
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.deepPurple.shade50,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.deepPurple.shade100),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
                     child: Row(
                       children: [
-                        const CircleAvatar(
-                          radius: 20,
-                          backgroundColor: Colors.deepPurple,
-                          child: Icon(Icons.person, color: Colors.white),
-                        ),
+                        const CircleAvatar(child: Icon(Icons.person)),
                         const SizedBox(width: 12),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Автор товару',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.black54,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
                             Text(
-                              _ownerName ?? 'завантаження...',
+                              _owner?['name'] ?? 'завантаження...',
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                                 fontSize: 16,
-                                color: Colors.deepPurple,
                               ),
                             ),
                           ],
                         ),
                         const Spacer(),
-                        const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 16,
-                          color: Colors.deepPurple,
-                        ),
+                        const Icon(Icons.chevron_right),
                       ],
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 16),
-                const Divider(),
+                const SizedBox(height: 20),
 
-                // 🏷️ Назва та ціна
+                // Назва і ціна
                 Text(
                   widget.product['name'],
                   style: const TextStyle(
@@ -169,83 +158,97 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 6),
                 Text(
                   '${widget.product['price']} грн',
                   style: const TextStyle(fontSize: 18, color: Colors.green),
                 ),
-
                 const SizedBox(height: 16),
-                const Divider(),
 
-                // 📄 Опис
-                if (widget.product['description'] != null)
-                  Column(
+                // Опис
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
                         'Опис',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
-                      const SizedBox(height: 8),
-                      Text(widget.product['description']),
+                      const SizedBox(height: 4),
+                      Text(widget.product['description'] ?? 'Немає опису'),
                     ],
                   ),
-
-                const SizedBox(height: 16),
-                const Divider(),
-
-                // 📦 Кількість
-                Row(
-                  children: [
-                    const Icon(Icons.inventory_2, size: 20),
-                    const SizedBox(width: 8),
-                    Text('В наявності: $stock шт'),
-                  ],
                 ),
 
                 const SizedBox(height: 12),
-                const Divider(),
 
-                // 📅 Дата створення
-                Row(
-                  children: [
-                    const Icon(Icons.calendar_today, size: 20),
-                    const SizedBox(width: 8),
-                    Text('Створено: $createdAt'),
-                  ],
+                // Кількість
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.inventory_2_outlined),
+                      const SizedBox(width: 8),
+                      Text('В наявності: $stock шт'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // Дата створення
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today_outlined, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Створено: $createdAt'),
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
 
-          // 💬 Поле для повідомлення
+          // Ввід повідомлення
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
               child: Row(
                 children: [
                   Expanded(
-                    child: TextField(
-                      controller: _messageController,
-                      decoration: InputDecoration(
-                        hintText: 'Введіть повідомлення...',
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(24),
-                          borderSide: BorderSide(color: Colors.grey.shade300),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: Colors.grey.shade400),
+                        color: Colors.white,
+                      ),
+                      child: TextField(
+                        controller: _messageController,
+                        decoration: const InputDecoration(
+                          hintText: 'Введіть повідомлення...',
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.send, color: Colors.blueAccent),
+                    icon: const Icon(Icons.send, color: Colors.blue),
                     onPressed: _sendMessageToAuthor,
                   ),
                 ],

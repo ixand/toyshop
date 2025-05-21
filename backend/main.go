@@ -34,6 +34,7 @@ func main() {
 
 	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
 	r.POST("/create-payment-intent", controllers.CreatePaymentIntent)
+	r.GET("/reviews/author/:author_id", controllers.GetReviewsByAuthor)
 
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())

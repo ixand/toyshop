@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"time"
 	"toyshop/database"
 	"toyshop/models"
 
@@ -12,6 +13,16 @@ type ReviewRequest struct {
 	ProductID uint   `json:"product_id"`
 	Rating    int    `json:"rating"`
 	Comment   string `json:"comment"`
+}
+
+type ReviewWithAuthor struct {
+	ID        uint      `json:"id"`
+	ProductID uint      `json:"product_id"`
+	UserID    uint      `json:"user_id"`
+	UserName  string    `json:"user_name"`
+	Rating    int       `json:"rating"`
+	Comment   string    `json:"comment"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func CreateReview(c *gin.Context) {
@@ -49,11 +60,44 @@ func CreateReview(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"message": "Відгук додано!"})
 }
 
+type ReviewWithUser struct {
+	models.Review
+	UserName  string    `json:"user_name"`
+	UserSince time.Time `json:"user_since"`
+}
+
 func GetReviewsByProduct(c *gin.Context) {
 	productID := c.Param("product_id")
-	var reviews []models.Review
+	var reviews []ReviewWithAuthor
 
-	if err := database.DB.Where("product_id = ?", productID).Find(&reviews).Error; err != nil {
+	err := database.DB.
+		Table("reviews").
+		Select("reviews.id, reviews.product_id, reviews.user_id, users.name as user_name, reviews.rating, reviews.comment, reviews.created_at").
+		Joins("left join users on users.id = reviews.user_id").
+		Where("product_id = ?", productID).
+		Scan(&reviews).Error
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, reviews)
+}
+
+func GetReviewsByAuthor(c *gin.Context) {
+	authorID := c.Param("author_id")
+	var reviews []ReviewWithAuthor
+
+	err := database.DB.
+		Table("reviews").
+		Select("reviews.id, reviews.product_id, reviews.user_id, users.name as user_name, reviews.rating, reviews.comment, reviews.created_at").
+		Joins("left join users on users.id = reviews.user_id").
+		Joins("left join products on products.id = reviews.product_id").
+		Where("products.owner_id = ?", authorID).
+		Scan(&reviews).Error
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
