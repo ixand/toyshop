@@ -39,6 +39,7 @@ CREATE TABLE products (
     id SERIAL PRIMARY KEY,
     _name TEXT NOT NULL,
     _description TEXT,
+    _status TEXT,
     price NUMERIC(10, 2) NOT NULL,
     image_url TEXT,
     _location TEXT,

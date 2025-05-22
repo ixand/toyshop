@@ -100,7 +100,27 @@ class _MyProductsScreenState extends State<MyProductsScreen> {
                       ),
 
                       title: Text(product['name']),
-                      subtitle: Text('${product['price']} грн'),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('${product['price']} грн'),
+                          Text(
+                            'Статус: ${product['status'] == 'active'
+                                ? 'Активно'
+                                : product['status'] == 'pending'
+                                ? 'Очікується'
+                                : 'Неактивно'}',
+                            style: TextStyle(
+                              color:
+                                  product['status'] == 'active'
+                                      ? Colors.green
+                                      : Colors.orange,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [

@@ -10,7 +10,7 @@ import (
 
 func GetProducts(c *gin.Context) {
 	var products []models.Product
-	result := database.DB.Find(&products)
+	result := database.DB.Where("_status = ?", "active").Find(&products)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
@@ -33,6 +33,7 @@ func GetMyProducts(c *gin.Context) {
 }
 
 func CreateProduct(c *gin.Context) {
+
 	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизовано"})
@@ -40,6 +41,8 @@ func CreateProduct(c *gin.Context) {
 	}
 
 	var product models.Product
+
+	product.Status = "pending"
 
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -60,6 +63,9 @@ func UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
 
 	var product models.Product
+
+	product.Status = "pending"
+
 	if err := database.DB.First(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Товар не знайдено"})
 		return
@@ -117,4 +123,38 @@ func DeleteProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Товар видалено"})
+}
+
+func GetAllProducts(c *gin.Context) {
+	var products []models.Product
+	if err := database.DB.Find(&products).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Не вдалося завантажити продукти"})
+		return
+	}
+	c.JSON(200, products)
+}
+
+func UpdateProductStatus(c *gin.Context) {
+	id := c.Param("id")
+	var body struct {
+		Status string `json:"Status"`
+	}
+	if err := c.ShouldBindJSON(&body); err != nil {
+		c.JSON(400, gin.H{"error": "Некоректні дані"})
+		return
+	}
+	if err := database.DB.Model(&models.Product{}).Where("id = ?", id).Update("Status", body.Status).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Не вдалося оновити статус"})
+		return
+	}
+	c.JSON(200, gin.H{"message": "Статус оновлено"})
+}
+
+func GetAllProductsForAdmin(c *gin.Context) {
+	var products []models.Product
+	if err := database.DB.Find(&products).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося завантажити товари"})
+		return
+	}
+	c.JSON(http.StatusOK, products)
 }

@@ -76,7 +76,7 @@ func Login(c *gin.Context) {
 	}
 
 	// Створити токен
-	token, err := utils.GenerateJWT(user.ID)
+	token, err := utils.GenerateJWT(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося створити токен"})
 		return

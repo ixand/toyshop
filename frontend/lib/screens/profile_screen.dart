@@ -3,6 +3,7 @@ import 'package:toyshop/screens/login_screen.dart';
 import 'package:toyshop/screens/top_up_screen.dart';
 import 'package:toyshop/screens/settings_screen.dart';
 import 'package:toyshop/screens/delivery_screen.dart';
+import 'package:toyshop/screens/admin_product_moderation_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -21,6 +22,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     'registered': '',
     'balance': 0.0,
     'avatar': null,
+    'role': 'user',
   };
 
   String formattedDate = '';
@@ -51,6 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         user['email'] = data['email'] ?? '';
         user['registered'] = reg;
         user['balance'] = data['balance'] ?? 0.0;
+        user['role'] = data['role'] ?? 'user';
         formattedDate = reg;
       });
     }
@@ -152,7 +155,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               'Баланс',
               '${user['balance'].toStringAsFixed(2)} ₴',
             ),
-
             const SizedBox(height: 32),
             const Align(
               alignment: Alignment.topLeft,
@@ -194,10 +196,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 32),
-
-            /// 2x2 кнопки у Grid
             GridView.count(
               shrinkWrap: true,
               crossAxisCount: 2,
@@ -221,38 +220,59 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       context,
                       MaterialPageRoute(builder: (_) => const TopUpScreen()),
                     );
-
-                    if (result == true) {
-                      _fetchUserProfile(); // оновлення балансу після повернення
-                    }
+                    if (result == true) _fetchUserProfile();
                   },
                 ),
-
                 _buildActionButton(
                   icon: Icons.local_shipping,
                   label: 'Логістика',
                   color: Colors.orange,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const DeliveryScreen()),
-                    );
-                  },
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const DeliveryScreen(),
+                        ),
+                      ),
                 ),
-
                 _buildActionButton(
                   icon: Icons.settings,
                   label: 'Налаштування',
                   color: Colors.grey.shade800,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const SettingsScreen()),
-                    );
-                  },
+                  onTap:
+                      () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const SettingsScreen(),
+                        ),
+                      ),
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            if (user['role'] == 'admin')
+              ElevatedButton.icon(
+                icon: const Icon(Icons.admin_panel_settings),
+                label: const Text('Модерація товарів'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.indigo,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 14,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed:
+                    () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AdminProductModerationScreen(),
+                      ),
+                    ),
+              ),
           ],
         ),
       ),
