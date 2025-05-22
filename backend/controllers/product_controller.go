@@ -50,8 +50,8 @@ func CreateProduct(c *gin.Context) {
 	}
 
 	var product models.Product
-
 	product.Status = "pending"
+	product.PreviousData = "{}" // порожній обʼєкт JSON — валідне значення
 
 	if err := c.ShouldBindJSON(&product); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -72,46 +72,56 @@ func UpdateProduct(c *gin.Context) {
 	id := c.Param("id")
 
 	var product models.Product
-
-	// Отримуємо поточний товар
 	if err := database.DB.First(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Товар не знайдено"})
 		return
 	}
 
+	// Створюємо мапу попередніх значень
+	prevMap := map[string]interface{}{
+		"id":             product.ID,
+		"name":           product.Name,
+		"description":    product.Description,
+		"price":          product.Price,
+		"image_url":      product.ImageURL,
+		"location":       product.Location,
+		"stock_quantity": product.StockQuantity,
+		"category_id":    product.CategoryID,
+		"owner_id":       product.OwnerID,
+		"created_at":     product.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		"status":         product.Status,
+	}
+
+	// Отримуємо нові дані
 	var input map[string]interface{}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Оновлюємо лише передані поля
-	if name, ok := input["name"].(string); ok {
-		product.Name = name
+	// Мапінг ключів на назви колонок у базі
+	if val, ok := input["name"]; ok {
+		input["_name"] = val
+		delete(input, "name")
 	}
-	if description, ok := input["description"].(string); ok {
-		product.Description = description
+	if val, ok := input["description"]; ok {
+		input["_description"] = val
+		delete(input, "description")
 	}
-	if price, ok := input["price"].(float64); ok {
-		product.Price = price
+	if val, ok := input["location"]; ok {
+		input["_location"] = val
+		delete(input, "location")
 	}
-	if imageURL, ok := input["image_url"].(string); ok {
-		product.ImageURL = imageURL
-	}
-	if location, ok := input["location"].(string); ok {
-		product.Location = location
-	}
-	if categoryID, ok := input["category_id"].(float64); ok {
-		product.CategoryID = uint(categoryID)
-	}
-	if stockQuantity, ok := input["stock_quantity"].(float64); ok {
-		product.StockQuantity = int(stockQuantity)
-	}
-	if status, ok := input["status"].(string); ok {
-		product.Status = status
+	if val, ok := input["status"]; ok {
+		input["_status"] = val
+		delete(input, "status")
 	}
 
-	if err := database.DB.Save(&product).Error; err != nil {
+	// Додаємо попередні дані як JSON
+	input["previous_data"] = prevMap
+
+	// Оновлюємо запис
+	if err := database.DB.Model(&product).Updates(input).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

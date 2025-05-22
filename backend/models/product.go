@@ -14,4 +14,5 @@ type Product struct {
 	OwnerID       uint      `json:"owner_id"`
 	CreatedAt     time.Time `json:"created_at"`
 	Status        string    `json:"status" gorm:"column:_status"`
+	PreviousData  string    `json:"previous_data" gorm:"column:previous_data"`
 }

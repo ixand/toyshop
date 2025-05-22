@@ -15,12 +15,19 @@ class AdminProductDetailScreen extends StatefulWidget {
 
 class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
   late String _status;
+  late Map<String, dynamic> _previous;
   final List<String> _statusOptions = ['pending', 'active', 'inactive'];
 
   @override
   void initState() {
     super.initState();
     _status = widget.product['status'] ?? 'pending';
+
+    try {
+      _previous = jsonDecode(widget.product['previous_data'] ?? '{}');
+    } catch (_) {
+      _previous = {};
+    }
   }
 
   Future<void> _updateStatus(String newStatus) async {
@@ -42,14 +49,33 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Статус оновлено')));
-      setState(() {
-        _status = newStatus;
-      });
+      setState(() => _status = newStatus);
     } else {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Помилка: ${response.body}')));
     }
+  }
+
+  Widget _buildField(String label, dynamic current, dynamic previous) {
+    final hasChanged =
+        previous != null && previous.toString() != current.toString();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+        if (hasChanged) ...[
+          Text('Було: $previous', style: const TextStyle(color: Colors.red)),
+          Text('Стало: $current', style: const TextStyle(color: Colors.green)),
+        ] else
+          Text(
+            current?.toString() ?? '',
+            style: const TextStyle(color: Colors.green),
+          ),
+        const SizedBox(height: 12),
+      ],
+    );
   }
 
   @override
@@ -73,25 +99,26 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
                 ),
               ),
             const SizedBox(height: 16),
-            Text(
-              product['name'] ?? 'Без назви',
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            _buildField('Назва', product['name'], _previous['name']),
+            _buildField(
+              'Опис',
+              product['description'],
+              _previous['description'],
             ),
-            const SizedBox(height: 8),
-            Text(
-              '${product['price']} грн',
-              style: const TextStyle(fontSize: 18, color: Colors.green),
+            _buildField('Ціна (грн)', product['price'], _previous['price']),
+            _buildField(
+              'Кількість',
+              product['stock_quantity'],
+              _previous['stock_quantity'],
             ),
-            const SizedBox(height: 8),
-            if (product['description'] != null)
-              Text(
-                product['description'],
-                style: const TextStyle(fontSize: 16),
-              ),
-            const SizedBox(height: 8),
-            Text('Категорія ID: ${product['category_id']}'),
-            Text('Автор ID: ${product['owner_id']}'),
-            const SizedBox(height: 16),
+            _buildField('Локація', product['location'], _previous['location']),
+            _buildField(
+              'Категорія ID',
+              product['category_id'],
+              _previous['category_id'],
+            ),
+            _buildField('Автор ID', product['owner_id'], _previous['owner_id']),
+            const SizedBox(height: 12),
             const Text('Змінити статус:', style: TextStyle(fontSize: 16)),
             const SizedBox(height: 8),
             DropdownButtonFormField<String>(

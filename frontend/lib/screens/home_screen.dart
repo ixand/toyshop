@@ -4,7 +4,6 @@ import 'package:toyshop/screens/messages_screen.dart';
 import 'package:toyshop/screens/order_screen.dart';
 import 'package:toyshop/screens/products_screen.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -35,10 +34,7 @@ class _HomeScreenState extends State<HomeScreen> {
       icon: Icon(Icons.message_outlined),
       label: 'Повідомлення',
     ),
-    BottomNavigationBarItem(
-      icon: Icon(Icons.person_outline),
-      label: 'Профіль',
-    ),
+    BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Профіль'),
   ];
 
   @override

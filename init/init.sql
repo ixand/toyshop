@@ -46,7 +46,8 @@ CREATE TABLE products (
     stock_quantity INT DEFAULT 0,
     category_id INT REFERENCES categories(id),
     owner_id INT REFERENCES users(id),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    previous_data JSONB
 );
 
 -- Таблиця замовлень
