@@ -25,6 +25,7 @@ func main() {
 
 	r.POST("/create-payment-intent", controllers.CreatePaymentIntent)
 	r.GET("/products", controllers.GetProducts)
+	r.GET("/products/active", controllers.GetActiveProducts)
 	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
 	r.GET("/reviews/author/:author_id", controllers.GetReviewsByAuthor)
 	r.PUT("/users/:id", controllers.UpdateUser)
@@ -58,7 +59,7 @@ func main() {
 	admin := r.Group("/admin")
 	admin.Use(middleware.AuthMiddleware(), middleware.AdminOnly())
 	{
-		admin.GET("/products", controllers.GetAllProducts)
+		admin.GET("/products", controllers.GetAllProductsForAdmin)
 		admin.PUT("/products/:id/status", controllers.UpdateProductStatus)
 	}
 

@@ -33,10 +33,6 @@ class _AdminProductModerationScreenState
       setState(() {
         _products = jsonDecode(response.body);
       });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Помилка завантаження: ${response.body}')),
-      );
     }
   }
 

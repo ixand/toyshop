@@ -10,13 +10,22 @@ import (
 
 func GetProducts(c *gin.Context) {
 	var products []models.Product
-	result := database.DB.Where("_status = ?", "active").Find(&products)
+	result := database.DB.Find(&products)
 
 	if result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
 		return
 	}
 
+	c.JSON(http.StatusOK, products)
+}
+
+func GetActiveProducts(c *gin.Context) {
+	var products []models.Product
+	if err := database.DB.Where("_status = ?", "active").Find(&products).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося завантажити активні товари"})
+		return
+	}
 	c.JSON(http.StatusOK, products)
 }
 
@@ -64,8 +73,7 @@ func UpdateProduct(c *gin.Context) {
 
 	var product models.Product
 
-	product.Status = "pending"
-
+	// Отримуємо поточний товар
 	if err := database.DB.First(&product, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Товар не знайдено"})
 		return
@@ -98,6 +106,9 @@ func UpdateProduct(c *gin.Context) {
 	}
 	if stockQuantity, ok := input["stock_quantity"].(float64); ok {
 		product.StockQuantity = int(stockQuantity)
+	}
+	if status, ok := input["status"].(string); ok {
+		product.Status = status
 	}
 
 	if err := database.DB.Save(&product).Error; err != nil {
@@ -136,25 +147,54 @@ func GetAllProducts(c *gin.Context) {
 
 func UpdateProductStatus(c *gin.Context) {
 	id := c.Param("id")
+
+	// Приймаємо JSON з ключем "status"
 	var body struct {
-		Status string `json:"Status"`
+		Status string `json:"status"`
 	}
 	if err := c.ShouldBindJSON(&body); err != nil {
-		c.JSON(400, gin.H{"error": "Некоректні дані"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Некоректні дані"})
 		return
 	}
-	if err := database.DB.Model(&models.Product{}).Where("id = ?", id).Update("Status", body.Status).Error; err != nil {
-		c.JSON(500, gin.H{"error": "Не вдалося оновити статус"})
+
+	// Валідація статусу (тільки дозволені значення)
+	allowedStatuses := map[string]bool{
+		"active":   true,
+		"inactive": true,
+		"pending":  true,
+	}
+	if !allowedStatuses[body.Status] {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Неприпустиме значення статусу"})
 		return
 	}
-	c.JSON(200, gin.H{"message": "Статус оновлено"})
+
+	// Знаходимо товар
+	var product models.Product
+	if err := database.DB.First(&product, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Товар не знайдено"})
+		return
+	}
+
+	// Дозволено змінювати тільки товари зі статусом "pending"
+	if product.Status != "pending" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Статус можна змінити лише для товарів зі статусом 'очікується'"})
+		return
+	}
+
+	// Оновлюємо статус
+	if err := database.DB.Model(&product).Update("_status", body.Status).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося оновити статус"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Статус оновлено"})
 }
 
 func GetAllProductsForAdmin(c *gin.Context) {
 	var products []models.Product
-	if err := database.DB.Find(&products).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося завантажити товари"})
+	if err := database.DB.Where("_status = ?", "pending").Find(&products).Error; err != nil {
+		c.JSON(500, gin.H{"error": "Не вдалося завантажити продукти"})
 		return
 	}
-	c.JSON(http.StatusOK, products)
+	c.JSON(200, products)
 }

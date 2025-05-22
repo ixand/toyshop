@@ -106,7 +106,31 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
                       )
                       .toList(),
               onChanged: (newStatus) {
-                if (newStatus != null) _updateStatus(newStatus);
+                if (newStatus != null && newStatus != _status) {
+                  showDialog(
+                    context: context,
+                    builder:
+                        (ctx) => AlertDialog(
+                          title: const Text('Підтвердження'),
+                          content: Text(
+                            'Змінити статус на "${_mapStatusToUkr(newStatus)}"?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('Скасувати'),
+                            ),
+                            ElevatedButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                _updateStatus(newStatus);
+                              },
+                              child: const Text('Підтвердити'),
+                            ),
+                          ],
+                        ),
+                  );
+                }
               },
             ),
           ],
