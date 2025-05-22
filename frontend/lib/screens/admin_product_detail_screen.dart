@@ -46,11 +46,13 @@ class _AdminProductDetailScreenState extends State<AdminProductDetailScreen> {
     );
 
     if (response.statusCode == 200) {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Статус оновлено')));
-      setState(() => _status = newStatus);
+      Navigator.pop(context, true); // ✅ Повертаємось до попереднього екрану
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Помилка: ${response.body}')));
