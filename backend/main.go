@@ -29,15 +29,18 @@ func main() {
 	r.GET("/reviews/:product_id", controllers.GetReviewsByProduct)
 	r.GET("/reviews/author/:author_id", controllers.GetReviewsByAuthor)
 	r.PUT("/users/:id", controllers.UpdateUser)
+
 	// Маршрути з авторизацією
 	auth := r.Group("/")
 	auth.Use(middleware.AuthMiddleware())
 	{
+		auth.PUT("/orders/:id/status", controllers.UpdateOrderStatus)
 		auth.GET("/me", controllers.GetCurrentUser)
 		auth.GET("/my-products", controllers.GetMyProducts)
 		auth.POST("/products", controllers.CreateProduct)
 		auth.PUT("/products/:id", controllers.UpdateProduct)
 		auth.DELETE("/products/:id", controllers.DeleteProduct)
+		auth.GET("/my-incoming-orders", controllers.GetIncomingOrders)
 
 		auth.GET("/my-orders", controllers.GetMyOrders)
 		auth.POST("/orders", controllers.CreateOrder)
@@ -53,6 +56,12 @@ func main() {
 
 		auth.POST("/top-up", controllers.TopUpBalance)
 		auth.POST("/payment-success", controllers.PaymentSuccess)
+
+		auth.POST("/create-ttn", controllers.CreateTTN)
+
+		auth.GET("/my-deliveries", controllers.GetMyDeliveries)
+		auth.PUT("/orders/:id/ship", controllers.ShipOrder)
+
 	}
 
 	// Адмінські маршрути

@@ -12,10 +12,7 @@ import (
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(bytes), nil
+	return string(bytes), err
 }
 
 func CheckPasswordHash(password, hash string) bool {
@@ -25,20 +22,18 @@ func CheckPasswordHash(password, hash string) bool {
 
 func GetUsers(c *gin.Context) {
 	var users []models.User
-	result := database.DB.Find(&users)
-
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+	if err := database.DB.Find(&users).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
 	c.JSON(http.StatusOK, users)
 }
 
 type RegisterAttempt struct {
+	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
-	Name     string `json:"name"`
+	Phone    string `json:"phone"`
 }
 
 type LoginAttempt struct {
@@ -51,38 +46,29 @@ type UpdateAttempt struct {
 	Email    string `json:"email"`
 	Role     string `json:"role"`
 	Password string `json:"password"`
+	Phone    string `json:"phone"`
 }
 
 func Login(c *gin.Context) {
 	var input LoginAttempt
 	var user models.User
 
-	// Зчитати дані з тіла запиту
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Знайти користувача з таким email
-	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
+	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err != nil || !CheckPasswordHash(input.Password, user.PasswordHash) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неправильний email або пароль"})
 		return
 	}
 
-	// Перевірити пароль
-	if !CheckPasswordHash(input.Password, user.PasswordHash) {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Неправильний email або пароль"})
-		return
-	}
-
-	// Створити токен
 	token, err := utils.GenerateJWT(user.ID, user.Role)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося створити токен"})
 		return
 	}
 
-	// Повертаємо токен і користувача одним JSON-об'єктом
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Успішний вхід",
 		"token":   token,
@@ -91,59 +77,53 @@ func Login(c *gin.Context) {
 			"name":  user.Name,
 			"email": user.Email,
 			"role":  user.Role,
+			"phone": user.Phone,
 		},
 	})
-
 }
 
 func CreateUser(c *gin.Context) {
 	var input RegisterAttempt
-
-	// Прочитати JSON з тіла запиту і перетворити в структуру User
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	var user models.User
+	if input.Name == "" || input.Email == "" || input.Password == "" || input.Phone == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Усі поля є обов'язковими"})
+		return
+	}
 
-	// Перевірити, чи існує користувач з таким email
-	if err := database.DB.Where("email = ?", input.Email).First(&user).Error; err == nil {
+	var existing models.User
+	if err := database.DB.Where("email = ?", input.Email).First(&existing).Error; err == nil {
 		c.JSON(http.StatusConflict, gin.H{"error": "Користувач з таким email вже існує"})
 		return
 	}
 
-	// Хешувати пароль
 	hashedPassword, err := HashPassword(input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка хешування паролю"})
 		return
 	}
 
-	if input.Name == "" || input.Email == "" || len(input.Password) < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ім’я, email та пароль обов'язкові"})
+	user := models.User{
+		Name:         input.Name,
+		Email:        input.Email,
+		PasswordHash: hashedPassword,
+		Phone:        input.Phone,
+		Role:         "user",
+	}
+
+	if err := database.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка створення користувача"})
 		return
 	}
 
-	// Зберегти користувача в базу
-	user.Name = input.Name
-	user.Email = input.Email
-	user.PasswordHash = hashedPassword
-	user.Role = "user" // За замовчуванням роль "user"
-	result := database.DB.Create(&user)
-
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
-		return
-	}
-
-	// Повернути створеного користувача у відповіді
 	c.JSON(http.StatusCreated, user)
 }
 
 func UpdateUser(c *gin.Context) {
-	id := c.Param("id") // Отримуємо id з URL
-
+	id := c.Param("id")
 	var user models.User
 	if err := database.DB.First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Користувача не знайдено"})
@@ -156,39 +136,39 @@ func UpdateUser(c *gin.Context) {
 		return
 	}
 
-	if input.Name == "" || input.Email == "" || len(input.Password) < 1 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Ім’я, email та пароль не можуть бути порожні"})
+	if input.Name == "" || input.Email == "" || input.Password == "" || input.Phone == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Усі поля обов'язкові"})
 		return
 	}
 
-	// Хешуємо новий пароль
 	hashedPassword, err := HashPassword(input.Password)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка хешування паролю"})
 		return
 	}
 
-	// Оновлюємо поля
 	user.Name = input.Name
 	user.Email = input.Email
 	user.PasswordHash = hashedPassword
+	user.Phone = input.Phone
 	user.Role = input.Role
-	database.DB.Save(&user)
+
+	if err := database.DB.Save(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Помилка оновлення користувача"})
+		return
+	}
 
 	c.JSON(http.StatusOK, user)
 }
 
 func DeleteUser(c *gin.Context) {
 	id := c.Param("id")
-
 	var user models.User
 	if err := database.DB.First(&user, id).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Користувача не знайдено"})
 		return
 	}
-
 	database.DB.Delete(&user)
-
 	c.JSON(http.StatusOK, gin.H{"message": "Користувача видалено"})
 }
 
@@ -209,6 +189,7 @@ func GetCurrentUser(c *gin.Context) {
 		"id":         user.ID,
 		"name":       user.Name,
 		"email":      user.Email,
+		"phone":      user.Phone,
 		"role":       user.Role,
 		"balance":    user.Balance,
 		"created_at": user.CreatedAt,
@@ -227,12 +208,7 @@ func TopUpBalance(c *gin.Context) {
 	}
 
 	var input TopUpBalanceInput
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Невірний формат JSON"})
-		return
-	}
-
-	if input.Amount <= 0 {
+	if err := c.ShouldBindJSON(&input); err != nil || input.Amount <= 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Сума повинна бути більшою за 0"})
 		return
 	}
@@ -244,7 +220,6 @@ func TopUpBalance(c *gin.Context) {
 	}
 
 	user.Balance += input.Amount
-
 	if err := database.DB.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Не вдалося оновити баланс"})
 		return

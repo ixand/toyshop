@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     _name TEXT NOT NULL,
+    phone TEXT UNIQUE NOT NULL,
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     balance FLOAT,
@@ -57,8 +58,13 @@ CREATE TABLE orders (
     _status TEXT DEFAULT 'очікується',
     shipping_address TEXT,
     payment_status TEXT DEFAULT 'неоплачений',
+    payment_type TEXT,
     total_price NUMERIC(10, 2),
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    recipient_first_name TEXT,
+    recipient_last_name TEXT,
+    recipient_middle_name TEXT,
+    ttn TEXT
 );
 
 -- Таблиця позицій у замовленні

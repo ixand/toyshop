@@ -29,6 +29,7 @@ type MessageRequest struct {
 }
 
 func CreateMessage(c *gin.Context) {
+
 	senderIDRaw, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Не авторизовано"})
@@ -39,6 +40,11 @@ func CreateMessage(c *gin.Context) {
 	var input MessageRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if input.ProductID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "product_id обовʼязковий"})
 		return
 	}
 
