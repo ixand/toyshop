@@ -6,37 +6,35 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class StripeService {
   static Future<void> makeTestPayment(BuildContext context, int amount) async {
-  final response = await http.post(
-    Uri.parse('http://10.0.2.2:8080/create-payment-intent'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({'amount': amount}),
-  );
+    final response = await http.post(
+      Uri.parse('http://10.0.2.2:8080/create-payment-intent'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'amount': amount}),
+    );
 
-  final jsonResponse = jsonDecode(response.body);
-  final clientSecret = jsonResponse['clientSecret'];
+    final jsonResponse = jsonDecode(response.body);
+    final clientSecret = jsonResponse['clientSecret'];
 
-  await Stripe.instance.initPaymentSheet(
-    paymentSheetParameters: SetupPaymentSheetParameters(
-      paymentIntentClientSecret: clientSecret,
-      merchantDisplayName: 'ToyShop',
-      style: ThemeMode.light,
-    ),
-  );
+    await Stripe.instance.initPaymentSheet(
+      paymentSheetParameters: SetupPaymentSheetParameters(
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: 'ToyShop',
+        style: ThemeMode.light,
+      ),
+    );
 
-  await Stripe.instance.presentPaymentSheet();
+    await Stripe.instance.presentPaymentSheet();
 
-  // 👉 Оновлюємо баланс користувача після підтвердження оплати
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('token');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
 
-  await http.post(
-    Uri.parse('http://10.0.2.2:8080/payment-success'),
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer $token',
-    },
-    body: jsonEncode({'amount': amount}),
-  );
+    await http.post(
+      Uri.parse('http://10.0.2.2:8080/payment-success'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'amount': amount}),
+    );
   }
-
 }
